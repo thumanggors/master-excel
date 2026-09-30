@@ -1,0 +1,209 @@
+# Answer Key
+
+Jawaban ditulis untuk baris pertama data (baris 2) kecuali disebutkan lain. Jika rumus Anda berbeda tetapi hasilnya sama, jawaban Anda tetap benar. Excel hampir selalu punya lebih dari satu cara.
+
+## BAB 1 · Fundamental Excel & Logika Rumus
+
+| No | Formula | Hasil |
+|---|---|---|
+| 1 | `=SUM(B2:B6)` | 100 |
+| 2 | `=AVERAGE(C2:C6)` | 2,404,000 |
+| 3 | `=MAX(C2:C6)` | 7,500,000 |
+| 4 | `=MIN(B2:B6)` | 5 |
+| 5 | `=COUNTA(A2:A6)` | 5 |
+| 6 | `=B2*C2+B3*C3+B4*C4+B5*C5+B6*C6` (atau `=SUMPRODUCT(B2:B6,C2:C6)` dari BAB 2) | 91,000,000 |
+| 7 | `=C2*(1-$G$1)` | Laptop 6,750,000 |
+| 8 | `=A2&" - "&B2&" unit"` | Laptop - 5 unit |
+| 9 | Pangkat dulu: 2^2 = 4, lalu 5×4 = 20, lalu 10+20 | 30 |
+| 10 | `=MAX(D2:D6)-MIN(D2:D6)` | 32,100,000 |
+| 11 | `=D2/SUM($D$2:$D$6)` | Monitor 24.40% |
+| 12 | `=$A2*B$1` | F6 = 25 |
+| 13 | Tanda negatif diproses sebelum pangkat. Tulis `=-(3^2)` atau `=0-3^2` | -9 |
+| 14 | `=SUM(D2:D6)/SUM(B2:B6)` | 910,000 |
+| 15 | `=COUNTBLANK(E2:E6)` | 3 |
+
+## BAB 2 · Rumus Matematika & Statistik
+
+| No | Formula | Hasil |
+|---|---|---|
+| 16 | `=SUM(B2:B7)` | 245,000,000 |
+| 17 | `=AVERAGE(B2:B7)` | 40,833,333 |
+| 18 | `=MEDIAN(C2:C7)` | 39,400,000 |
+| 19 | `=LARGE(C2:C7,2)` | 45,000,000 |
+| 20 | `=MIN(B2:B7)` | 30,000,000 |
+| 21 | `=SUMIF(B2:B7,50000000,C2:C7)` | 96,200,000 |
+| 22 | `=AVERAGEIF(B2:B7,">=40000000",C2:C7)` | 43,750,000 |
+| 23 | `=ABS(C5-B5)` | 1,300,000 |
+| 24 | `=ROUNDDOWN(C4,-6)` | 51,000,000 |
+| 25 | `=RANK(C6,$C$2:$C$7,0)` | 6 |
+| 26 | `=SUMPRODUCT((C2:C7>B2:B7)*(C2:C7-B2:B7))` | 3,800,000 |
+| 27 | `=SUMPRODUCT((C2:C7>=B2:B7)*C2:C7)*2%` | 2,476,000 |
+| 28 | `=MROUND(AVERAGE(C2:C7),500000)` | 39,000,000 |
+| 29 | `=SUM(C2:C7)*POWER(1.05,3)` | 271,810,350 |
+| 30 | `=ROUND(C3/B3,3)` (format Percentage 1 desimal) | 108.3% |
+
+## BAB 3 · Rumus Logika
+
+| No | Formula | Hasil |
+|---|---|---|
+| 31 | `=IF(D2=1,"SELESAI","BELUM")` | SELESAI untuk PRJ-05 dan PRJ-06 |
+| 32 | `=NOT(E2="Ya")` atau `=E2<>"Ya"` | TRUE untuk semua kecuali PRJ-05 |
+| 33 | `=IF($I$1>C2,"LEWAT","-")` | LEWAT untuk PRJ-02, PRJ-05, PRJ-06 |
+| 34 | `=AND(D2>0,D2<1)` | TRUE untuk PRJ-01, 02, 04, 07 |
+| 35 | `=SWITCH(K2,"OP","ON PROGRESS","DL","DELAY","CP","COMPLETED","-")` | Sesuai kode |
+| 36 | `=IFS(D2>=0.8,"Tinggi",D2>=0.4,"Sedang",TRUE,"Rendah")` | 01, 02, 05, 06 Tinggi. 04 Sedang. 03, 07 Rendah |
+| 37 | `=IF(D2>=0.8,"Tinggi",IF(D2>=0.4,"Sedang","Rendah"))` | Sama dengan no. 36 |
+| 38 | `=IF(OR(G2="DELAY",D2<0.3),"PERHATIAN","-")` | PRJ-02, PRJ-03, PRJ-07 |
+| 39 | `=COUNTIF(G2:G8,"DELAY")` | 2 |
+| 40 | `=IFERROR(D2/F2,"-")` | 1.02, 0.90, -, 0.81, 1.00, 1.00, 0.39 |
+| 41 | `=XOR(D2=1,E2="Ya")` | TRUE hanya untuk PRJ-06 |
+| 42 | `=SWITCH(G2,"ON TRACK","OT","ON PROGRESS","OP","DELAY","DL","-")` | OT, DL, -, OP, -, -, DL |
+| 43 | `=IFNA(VLOOKUP(K1&"*",A2:G8,7,FALSE),"Tidak ada")` | ON PROGRESS |
+| 44 | `=SUM(COUNTIF(G2:G8,{"ON TRACK","ON PROGRESS"}))` | 2 |
+| 45 | `=SWITCH(G2,"DELAY","MERAH","ON PROGRESS","KUNING","NOT STARTED","ABU","HIJAU")` | PRJ-01 HIJAU, PRJ-02 MERAH, dst. |
+
+## BAB 4 · Rumus Text & Data Processing
+
+| No | Formula | Hasil |
+|---|---|---|
+| 46 | `=LEFT(A2,3)` | JKT |
+| 47 | `=LEN(A2)` | 12 |
+| 48 | `=PROPER(A2)` | Siti Nurhaliza |
+| 49 | `=LOWER(A2)` | siti.n@yahoo.co.id |
+| 50 | `=TRIM(A2)` | andi pratama |
+| 51 | `=MID(A2,FIND("@",A2)+1,100)` | gmail.com |
+| 52 | `=LEFT(A2,FIND(" ",A2)-1)` | Siti |
+| 53 | `="CST-"&TEXT(A2,"0000")` | CST-0045 |
+| 54 | `=SUBSTITUTE(A2,"-","")` | 081977778888 |
+| 55 | `=A2&", "&B2` atau `=TEXTJOIN(", ",TRUE,A2:B2)` | Bandung, 40115 |
+| 56 | `=LEFT(A2,3)&"***"&MID(A2,FIND("@",A2),100)` | bud***@gmail.com |
+| 57 | `=LEN(TRIM(A2))-LEN(SUBSTITUTE(TRIM(A2)," ",""))+1` | 4 |
+| 58 | `=TRIM(RIGHT(SUBSTITUTE(A2," ",REPT(" ",100)),100))` | Santoso |
+| 59 | `=EXACT(A2,UPPER(A2))` | FALSE |
+| 60 | `=VALUE(SUBSTITUTE(SUBSTITUTE(A2,"Rp",""),".",""))` | 1250000 |
+
+Penjelasan no. 58: setiap spasi diganti 100 spasi, sehingga kata terakhir pasti berada di 100 karakter paling kanan. `TRIM` lalu membuang spasi yang ikut terambil.
+
+## BAB 5 · Rumus Tanggal & Waktu
+
+| No | Formula | Hasil |
+|---|---|---|
+| 61 | `=TODAY()` | 15 Jun 2026 (tanggal acuan) |
+| 62 | `=YEAR(B2)` | 2026 |
+| 63 | `=TEXT(B2,"[$-421]mmmm")` | Mei |
+| 64 | `=D3-B3` | 30 |
+| 65 | `=DATE(2026,12,31)` | 31 Dec 2026 |
+| 66 | `=EOMONTH(B5,0)` | 30 Jun 2026 |
+| 67 | `=EDATE(B2,3)` | 04 Aug 2026 |
+| 68 | `=TEXT(C4,"[$-421]dddd")` | Jumat |
+| 69 | `=NETWORKDAYS(DATE(2026,6,1),DATE(2026,6,15))` | 11 |
+| 70 | `=WEEKNUM(DATE(2026,6,15))` | 25 |
+| 71 | `=DATEDIF(A2,B2,"Y")&" thn "&DATEDIF(A2,B2,"YM")&" bln"` | 6 thn 10 bln |
+| 72 | `=WORKDAY(DATE(2026,6,15),15,H2:H3)` | 08 Jul 2026 |
+| 73 | `=DAY(EOMONTH(DATE(2026,6,1),0))-NETWORKDAYS(DATE(2026,6,1),EOMONTH(DATE(2026,6,1),0))` | 8 |
+| 74 | `=DATEDIF(DATE(1990,8,20),DATE(2026,6,15),"Y")` | 35 |
+| 75 | `=(B2-A2)*24-1` | 8.5 |
+
+## BAB 6 · Lookup & Pencarian Data
+
+| No | Formula | Hasil |
+|---|---|---|
+| 76 | `=VLOOKUP("MTR-005",$A$2:$G$7,2,FALSE)` | Patch Cord SC-SC 3m |
+| 77 | `=VLOOKUP("MTR-002",$A$2:$G$7,6,FALSE)` | 2,300 |
+| 78 | `=MATCH("MTR-006",A2:A7,0)` | 6 |
+| 79 | `=INDEX(A2:G7,3,3)` | OptiNet |
+| 80 | `=CHOOSE(3,"Pagi","Siang","Malam")` | Malam |
+| 81 | `=INDEX(A2:A7,MATCH("ODP 16 Port",B2:B7,0))` | MTR-004 |
+| 82 | `=XLOOKUP("MTR-010",A2:A7,G2:G7,"Tidak ada")` | Tidak ada |
+| 83 | `=HLOOKUP("Zona 3",$A$1:$D$3,3,FALSE)` | 5 |
+| 84 | `=LOOKUP(25000000,A2:A5,B2:B5)` | 1% |
+| 85 | `=XLOOKUP("MTR-004",A2:A7,F2:F7)*XLOOKUP("MTR-004",A2:A7,G2:G7)` | 59,800,000 |
+| 86 | `=INDEX(B2:B7,XMATCH("NexCom",C2:C7,0,-1))` | Splitter 1:8 |
+| 87 | `=INDEX(A2:G7,MATCH("MTR-001",A2:A7,0),MATCH("Stok",A1:G1,0))` | 8,400 |
+| 88 | `=INDEX(B2:B7,MATCH(MAX(F2:F7),F2:F7,0))` | ODP 16 Port |
+| 89 | `=INDEX(A2:A7,MATCH("*Drop*",B2:B7,0))` atau `=XLOOKUP("*Drop*",B2:B7,A2:A7,"-",2)` | MTR-002 |
+| 90 | `=XLOOKUP("MTR-003",A2:A7,CHOOSECOLS(B2:G7,2,5))` | OptiNet, 850,000 |
+
+## BAB 7 · Filter, Sort & Dynamic Array
+
+| No | Formula | Hasil |
+|---|---|---|
+| 91 | `=FILTER(A2:F9,E2:E9="COMPLETED")` | P-03, P-05 |
+| 92 | `=SORT(A2:F9,2,1)` | BTS Bogor (P-04) |
+| 93 | `=UNIQUE(E2:E9)` | ON PROGRESS, DELAY, COMPLETED |
+| 94 | `=SEQUENCE(10)` | 1 sampai 10 |
+| 95 | `=COUNTA(UNIQUE(D2:D9))` | 3 |
+| 96 | `=FILTER(A2:F9,(D2:D9="Nusanet")*(F2:F9>400))` | P-02, P-08 |
+| 97 | `=SORTBY(B2:B9,F2:F9,1)` | ODC Depok, Microcell Jakarta, BTS Bogor, Tower Bekasi, FTTH Medan, FO Access Tangerang, FTTH Bandung, FO Backbone Medan |
+| 98 | `=TAKE(SORT(A2:F9,6,1),2)` | P-05, P-07 |
+| 99 | `=FILTER(A2:F9,(C2:C9="Banten")+(C2:C9="DKI Jakarta"))` | P-06, P-07 |
+| 100 | `=SUM(FILTER(F2:F9,E2:E9="ON PROGRESS"))` | 1,525 |
+| 101 | `=LET(p,SORT(UNIQUE(C2:C9)),HSTACK(p,SUMIFS(F2:F9,C2:C9,p)))` | Banten 530, DKI Jakarta 295, Jawa Barat 1,685, Sumatera Utara 1,320 |
+| 102 | `=TEXTJOIN(", ",TRUE,FILTER(B2:B9,E2:E9="DELAY"))` | Tower Bekasi, FO Access Tangerang, FTTH Medan |
+| 103 | `=FILTER(B2:B9,F2:F9>AVERAGE(F2:F9))` | FO Backbone Medan, FTTH Bandung, FO Access Tangerang |
+| 104 | `=VSTACK({"ID","Project"},CHOOSECOLS(FILTER(A2:F9,D2:D9="NetraCom"),1,2))` | Judul + P-01, P-03, P-07 |
+| 105 | `=DATE(2026,SEQUENCE(12)+1,0)` | 31 Jan 2026 sampai 31 Dec 2026 |
+
+Penjelasan no. 103: rata-rata nilai adalah 3,830 ÷ 8 = 478.75, sehingga FTTH Medan (470) tidak ikut. Penjelasan no. 105: hari ke-0 sebuah bulan adalah hari terakhir bulan sebelumnya (lihat `DATE` di BAB 5).
+
+## BAB 8 · Data Cleaning & Validation
+
+| No | Formula | Hasil |
+|---|---|---|
+| 106 | `=COUNTBLANK(B2:B9)` | 1 |
+| 107 | `=ISNUMBER(G2)` | FALSE |
+| 108 | `=ISTEXT(G2)` | TRUE |
+| 109 | `=ISBLANK(B6)` | TRUE |
+| 110 | `=TRIM(A2)` | surabaya |
+| 111 | `=COUNTIF($A$2:A2,A2)>1` | TRUE hanya di baris 5 |
+| 112 | `=DATE(RIGHT(F2,4),MID(F2,4,2),LEFT(F2,2))` | 03 Jan 2026 |
+| 113 | `=SUM(IFERROR(VALUE(G2:G9),0))` | 8,655,000 |
+| 114 | `=COUNTIF(R2:R9,FALSE)` | 2 |
+| 115 | `=AND(ISNUMBER(--A2),LEN(A2)>=10,LEN(A2)<=13)` | FALSE |
+| 116 | Rumus email di Studi Kasus BAB 8 | FALSE, karena tidak ada titik setelah @ |
+| 117 | `=COUNTIF(S2:S9,"VALID")/COUNTA(A2:A9)` | 37.5% |
+| 118 | Data Validation Custom: `=N2<=TODAY()` | Tanggal masa depan ditolak |
+| 119 | `=SUMPRODUCT(1/COUNTIF(A2:A9,A2:A9))` | 7 |
+| 120 | `=SUMPRODUCT(--(LEN(B2:B9)<>LEN(TRIM(B2:B9))))` | 1 |
+
+Catatan no. 113: di Excel 2019 ke bawah, akhiri dengan **Ctrl+Shift+Enter** karena rumus memproses array.
+
+## BAB 9 · Database & Reporting
+
+| No | Formula | Hasil |
+|---|---|---|
+| 121 | `=COUNTIF(H2:H11,"COMPLETED")` | 3 |
+| 122 | `=SUMIF(B2:B11,"NetraCom",F2:F11)` | 4,700 |
+| 123 | `=COUNTIF(C2:C11,"Banten")` | 3 |
+| 124 | `=AVERAGE(G2:G11)` | 701 |
+| 125 | `=COUNTIF(D2:D11,"*Tangerang*")` | 2 |
+| 126 | `=SUMIFS(G2:G11,B2:B11,"Selulink",H2:H11,"COMPLETED")` | 1,700 |
+| 127 | `=COUNTIFS(E2:E11,"Bella",H2:H11,"<>COMPLETED")` | 3 |
+| 128 | `=AVERAGEIF(C2:C11,"Jawa Barat",F2:F11)` | 1,060 |
+| 129 | `=SUMIF(B2:B11,"Nusanet",G2:G11)/SUMIF(B2:B11,"Nusanet",F2:F11)` | 50.00% |
+| 130 | `=MAXIFS(G2:G11,C2:C11,"Banten")` | 1,000 |
+| 131 | Kriteria J1:K2 = Provider/Selulink, Provinsi/Jawa Barat. `=DSUM($A$1:$H$11,"Target",J1:K2)` | 1,300 |
+| 132 | Kriteria J1:K3: judul Status dan PIC, baris 2 "DELAY" di J2, baris 3 "Candra" di K3. `=DCOUNTA($A$1:$H$11,"Project",J1:K3)` | 5 |
+| 133 | Kriteria J1:J2 = Actual/240. `=DGET($A$1:$H$11,"Kab/Kota",J1:J2)` | Serang |
+| 134 | `=SUMIF(H2:H11,"ON PROGRESS",F2:F11)-SUMIF(H2:H11,"ON PROGRESS",G2:G11)` | 1,190 |
+| 135 | `=SUMPRODUCT(--(G2:G11/F2:F11<0.5))` | 2 |
+
+## BAB 10 · Advanced Formula & Formula Combination
+
+| No | Formula | Hasil |
+|---|---|---|
+| 136 | `=IF(AND(B2>=$F$1,C2>=$F$2),"Bonus","-")` | Bonus |
+| 137 | `=SUMIFS(C2:C7,A2:A7,">="&DATE(2026,5,1),A2:A7,"<"&DATE(2026,6,1))` | 5,000,000 |
+| 138 | `=COUNTIF(B2:B7,"Open")` | 4 |
+| 139 | `=LET(t,SUM(Data!I2:I9),a,SUM(Data!J2:J9),a/t)` | 58.72% |
+| 140 | `=SORT(UNIQUE(Data!C2:C9))` | Central, East, West |
+| 141 | `=SUMIFS(C2:C7,A2:A7,">="&DATE(2026,6,1),A2:A7,"<"&DATE(2026,7,1),B2:B7,"East")` | 3,200,000 |
+| 142 | `=SUMPRODUCT((Data!K2:K9="COMPLETED")*(Data!H2:H9>Data!F2:F9))` | 1 (PRJ-A02) |
+| 143 | `=SORT(FILTER(CHOOSECOLS(Data!A2:K9,1,9),Data!K2:K9="ON PROGRESS"),2,-1)` | PRJ-A04 1,500, PRJ-A08 1,100, PRJ-A06 900 |
+| 144 | `=IFERROR(XLOOKUP("MTR-002",$E$2:$E$4,$F$2:$F$4)*50,"Cek harga")` | 115,000 |
+| 145 | `=Data!N1-Data!G4` | 68 |
+| 146 | Name Manager: `SISA` = `=LAMBDA(target,actual,MAX(0,target-actual))`. Pakai `=SISA(Data!I4,Data!J4)` | 420 |
+| 147 | `=LET(p,SORT(UNIQUE(Data!D2:D9)),t,SUMIFS(Data!I2:I9,Data!D2:D9,p),a,SUMIFS(Data!J2:J9,Data!D2:D9,p),HSTACK(p,a/t))` | Andi 87.83%, Bella 62.94%, Candra 65.00%, Dewi 27.31% |
+| 148 | `=AVERAGE(FILTER(Data!N1-Data!G2:G9,Data!H2:H9=""))` | 43.8 hari |
+| 149 | `=SUMPRODUCT(--(Data!G2:G9-Data!E2:E9>1))` | 7 |
+| 150 | `=LET(r,SORT(UNIQUE(B2:B7)),HSTACK(r,SUMIFS(C2:C7,A2:A7,">="&DATE(2026,6,1),A2:A7,"<"&DATE(2026,7,1),B2:B7,r)))` | Central 4,500,000, East 3,200,000, West 13,900,000 |

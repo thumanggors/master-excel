@@ -1,0 +1,647 @@
+@@chapter 02 | RUMUS MATEMATIKA & STATISTIK
+desc: Menjumlahkan dengan syarat, membulatkan angka sesuai aturan kantor, mencari nilai tengah, dan menyusun ranking. Rumus di BAB ini adalah alat utama untuk laporan keuangan, penjualan, dan penggajian.
+goals:
+- Menjumlahkan data dengan satu atau banyak kriteria
+- Memilih fungsi pembulatan yang tepat untuk harga, pajak, dan jam kerja
+- Membedakan rata-rata, median, dan modus
+- Menyusun top list dan ranking otomatis
+- Menghitung achievement terhadap target
+extra: + 4 fungsi dasar lanjutan dari BAB 1
+@@end
+
+## 2.1 Penjumlahan dan Perkalian
+
+@@fx SUM (3D & Multi-Range)
+fungsi: Selain menjumlahkan satu range, `SUM` bisa menjumlahkan beberapa range sekaligus dan cell yang sama di beberapa sheet berurutan (3D reference). Teknik ini cocok untuk rekap bulanan yang datanya dipisah per sheet.
+syntax:
+=SUM(Sheet_awal:Sheet_akhir!cell)
+=SUM(range1, range2, ...)
+args:
+Sheet_awal:Sheet_akhir | Nama sheet pertama dan terakhir. Semua sheet di antaranya ikut dijumlahkan
+cell | Alamat cell yang sama di setiap sheet
+range1, range2 | Beberapa range terpisah yang dijumlahkan sekaligus
+data:
+@plain
+| Sheet | Isi cell B2 (Total Penjualan) |
+|---|---|
+| Jan | 125,400,000 |
+| Feb | 118,750,000 |
+| Mar | 132,100,000 |
+formula:
+=SUM(Jan:Mar!B2)
+=SUM(Jan!B2, Feb!B2, Mar!B2)   // cara panjang, hasil sama
+hasil: 376,250,000
+jelas: Excel mengambil cell B2 dari sheet Jan, Feb, dan Mar, lalu menjumlahkannya: 125,400,000 + 118,750,000 + 132,100,000 = 376,250,000. Karena memakai rentang sheet `Jan:Mar`, sheet baru yang diletakkan di antara Jan dan Mar otomatis ikut terhitung.
+tip: Buat dua sheet kosong bernama `Awal` dan `Akhir` sebagai pembatas, lalu tulis `=SUM(Awal:Akhir!B2)`. Setiap sheet bulan baru yang Anda seret di antara keduanya langsung masuk ke total tahunan.
+salah: 3D reference hanya benar jika struktur semua sheet identik. Jika di sheet Feb total ada di B3, bukan B2, hasilnya salah tanpa pesan error.
+real: Rekap penjualan kuartalan dari sheet bulanan, total biaya proyek dari beberapa sheet site, konsolidasi laporan cabang.
+@@end
+
+@@card PRODUCT (lanjutan BAB 1)
+=PRODUCT(B2:B4)   // B2:B4 berisi faktor pertumbuhan 1.05, 1.08, 1.10
+Hasil 1.2474, artinya pertumbuhan gabungan tiga tahun adalah 24.74%. `PRODUCT` praktis untuk mengalikan faktor pertumbuhan, kurs berantai, atau faktor koreksi. Pembahasan lengkap ada di BAB 1.
+@@end
+
+@@fx SUMIF
+fungsi: Menjumlahkan angka yang memenuhi satu kriteria. Misalnya total penjualan khusus region Jakarta.
+syntax: =SUMIF(range, criteria, [sum_range])
+args:
+range | Range yang diperiksa kriterianya
+criteria | Syarat, bisa teks (`"Jakarta"`), angka (`100`), operator (`">=50000000"`), atau alamat cell
+[sum_range] | Range yang dijumlahkan. Jika dikosongkan, `range` yang dijumlahkan
+data:
+| Region | Sales | Penjualan |
+| Jakarta | Andi | 45,000,000 |
+| Bandung | Bella | 32,500,000 |
+| Jakarta | Candra | 51,200,000 |
+| Surabaya | Dewi | 38,700,000 |
+| Bandung | Eko | 27,300,000 |
+| Jakarta | Fajar | 40,100,000 |
+formula: =SUMIF(A2:A7, "Jakarta", C2:C7)
+hasil: 136,300,000
+jelas: Excel memeriksa kolom A baris per baris. Baris 2, 4, dan 7 berisi "Jakarta", jadi nilai C2, C4, dan C7 dijumlahkan: 45,000,000 + 51,200,000 + 40,100,000 = 136,300,000.
+tip: Simpan kriteria di cell, misalnya F2 berisi `Jakarta`, lalu tulis `=SUMIF($A$2:$A$7, F2, $C$2:$C$7)`. Rumus bisa disalin ke bawah untuk Bandung dan Surabaya tanpa diketik ulang.
+salah: Ukuran `range` dan `sum_range` berbeda, misalnya `A2:A7` dengan `C2:C6`. Excel tidak memberi error, tetapi baris terakhir bisa tidak ikut terhitung. Pastikan kedua range dimulai dan berakhir di baris yang sama.
+real: Total penjualan per region, total biaya per kategori, total jam lembur per karyawan.
+@@end
+
+@@fx SUMIFS
+fungsi: Menjumlahkan angka yang memenuhi dua kriteria atau lebih sekaligus. Semua kriteria harus terpenuhi (logika AND).
+syntax: =SUMIFS(sum_range, criteria_range1, criteria1, [criteria_range2, criteria2], ...)
+args:
+sum_range | Range angka yang dijumlahkan (ditulis paling depan)
+criteria_range1 | Range pertama yang diperiksa
+criteria1 | Syarat untuk range pertama
+[criteria_range2, criteria2] | Pasangan range dan syarat berikutnya, sampai 127 pasang
+data:
+| Region | Kategori | Penjualan |
+| Jakarta | Hardware | 45,000,000 |
+| Bandung | Software | 32,500,000 |
+| Jakarta | Software | 51,200,000 |
+| Surabaya | Hardware | 38,700,000 |
+| Bandung | Hardware | 27,300,000 |
+| Jakarta | Hardware | 40,100,000 |
+formula:
+=SUMIFS(C2:C7, A2:A7, "Jakarta", B2:B7, "Hardware")
+=SUMIFS(C2:C7, A2:A7, "Jakarta", C2:C7, ">=45000000")
+hasil:
+Rumus pertama: 85,100,000
+Rumus kedua: 96,200,000
+jelas: Rumus pertama hanya menjumlahkan baris yang region-nya Jakarta dan kategorinya Hardware, yaitu baris 2 dan 7: 45,000,000 + 40,100,000. Rumus kedua mengambil transaksi Jakarta yang nilainya minimal 45 juta, yaitu baris 2 dan 4: 45,000,000 + 51,200,000.
+tip: Kriteria operator yang digabung dengan cell ditulis dengan `&`. Jika batas nominal ada di F1: `=SUMIFS(C2:C7, C2:C7, ">="&F1)`.
+salah: Urutan argument `SUMIFS` berbeda dengan `SUMIF`. Di `SUMIFS`, range yang dijumlahkan ditulis paling depan. Ini kesalahan paling umum saat berpindah dari `SUMIF` ke `SUMIFS`.
+real: Total penjualan per region per produk, total biaya proyek per provider per bulan, total klaim per departemen dengan status disetujui.
+@@end
+
+@@fx SUMPRODUCT
+fungsi: Mengalikan beberapa range baris per baris, lalu menjumlahkan semua hasil kalinya. Cukup satu cell untuk menghitung total tanpa kolom bantu.
+syntax: =SUMPRODUCT(array1, [array2], ...)
+args:
+array1 | Range atau array pertama
+[array2] | Range kedua dan seterusnya, ukurannya harus sama dengan array1
+data:
+| Item | Qty | Harga |
+| Pulpen | 24 | 3,500 |
+| Buku Tulis | 36 | 6,000 |
+| Map Plastik | 50 | 2,500 |
+| Stapler | 6 | 28,000 |
+formula: =SUMPRODUCT(B2:B5, C2:C5)
+hasil: 593,000
+jelas: Excel menghitung 24×3,500 = 84,000, lalu 36×6,000 = 216,000, 50×2,500 = 125,000, dan 6×28,000 = 168,000. Keempat hasil dijumlahkan menjadi 593,000. Anda tidak perlu membuat kolom Total terlebih dulu.
+tip: `SUMPRODUCT` juga bisa menjumlahkan dengan kriteria yang rumit, misalnya kriteria OR atau kriteria berdasarkan bulan. Teknik ini dibahas di BAB 10.
+salah: Range berbeda ukuran (misalnya `B2:B5` dan `C2:C6`) menghasilkan `#VALUE!`. Semua array harus punya jumlah baris dan kolom yang sama.
+real: Total nilai pembelian dari daftar PO, nilai persediaan (qty × harga), nilai tertimbang (bobot × skor) untuk penilaian vendor.
+@@end
+
+## 2.2 Operasi Angka
+
+@@fx ABS
+fungsi: Mengubah angka menjadi nilai mutlak (positif). Berguna untuk mengukur besarnya selisih tanpa peduli arahnya.
+syntax: =ABS(number)
+args:
+number | Angka atau rumus yang ingin diambil nilai mutlaknya
+data:
+| Pos Anggaran | Budget | Actual |
+| Marketing | 50,000,000 | 46,500,000 |
+| Training | 20,000,000 | 23,200,000 |
+| IT | 35,000,000 | 35,000,000 |
+formula: =ABS(C2-B2)   // di D2, salin ke D4
+hasil:
+| Pos Anggaran | Selisih Absolut |
+|---|---|
+| Marketing | 3,500,000 |
+| Training | 3,200,000 |
+| IT | 0 |
+jelas: Selisih Marketing sebenarnya -3,500,000 (di bawah budget), sedangkan Training +3,200,000 (di atas budget). `ABS` membuang tanda minus sehingga keduanya bisa dibandingkan dari besarnya deviasi.
+tip: Untuk mencari pos dengan deviasi terbesar, gabungkan dengan `MAX`: `=MAX(D2:D4)`.
+salah: Memakai `ABS` di kolom selisih lalu menjumlahkannya sebagai "total penghematan". Informasi arah (hemat atau boros) hilang. Simpan kolom selisih asli, gunakan `ABS` hanya untuk analisis deviasi.
+real: Analisis varians budget, selisih stok fisik dan sistem, deviasi jadwal proyek dalam hari.
+@@end
+
+@@fx MOD
+fungsi: Menghasilkan sisa pembagian. Jika 250 dibagi 24, hasil bagi bulatnya 10 dan sisanya 10.
+syntax: =MOD(number, divisor)
+args:
+number | Angka yang dibagi
+divisor | Angka pembagi
+data:
+| Produk | Qty (pcs) | Isi per Dus |
+| Air Mineral | 250 | 24 |
+| Mie Instan | 1,000 | 40 |
+| Teh Kotak | 125 | 36 |
+formula: =MOD(B2, C2)   // di D2, salin ke D4
+hasil:
+| Produk | Sisa pcs (tidak genap 1 dus) |
+|---|---|
+| Air Mineral | 10 |
+| Mie Instan | 0 |
+| Teh Kotak | 17 |
+jelas: 250 ÷ 24 = 10 dus penuh (240 pcs), sisa 10 pcs. 1,000 ÷ 40 habis dibagi, sisa 0. 125 ÷ 36 = 3 dus (108 pcs), sisa 17 pcs.
+tip: `=MOD(ROW(), 2)=0` menghasilkan TRUE di baris genap. Rumus ini sering dipakai di Conditional Formatting untuk membuat baris belang.
+salah: Divisor 0 menghasilkan `#DIV/0!`. Jika isi per dus bisa kosong, bungkus dengan `IFERROR` (BAB 3).
+real: Menghitung sisa barang di luar kemasan, pembagian shift bergilir, menandai setiap baris ke-n.
+@@end
+
+@@fx POWER
+fungsi: Memangkatkan angka. `=POWER(5, 2)` sama dengan `=5^2`.
+syntax: =POWER(number, power)
+args:
+number | Angka dasar
+power | Pangkat
+data:
+| Keterangan | Nilai |
+| Modal Awal | 100,000,000 |
+| Pertumbuhan per Tahun | 8% |
+| Jumlah Tahun | 3 |
+formula: =B2*POWER(1+B3, B4)
+hasil: 125,971,200
+jelas: Nilai tumbuh 8% per tahun secara majemuk. Faktor pertumbuhannya 1.08 pangkat 3 = 1.259712. Dikalikan modal 100,000,000 menjadi 125,971,200.
+tip: `POWER` dengan pangkat pecahan menghasilkan akar. `=POWER(B2, 1/3)` adalah akar pangkat tiga. Untuk menghitung pertumbuhan rata-rata per tahun (CAGR): `=POWER(Nilai_Akhir/Nilai_Awal, 1/Tahun)-1`.
+salah: Menulis pertumbuhan sebagai 8, bukan 8%. `POWER(1+8, 3)` menghasilkan 729, jauh dari maksud sebenarnya.
+real: Proyeksi nilai investasi, proyeksi kenaikan harga material, perhitungan CAGR penjualan.
+@@end
+
+@@fx SQRT
+fungsi: Menghitung akar kuadrat dari angka positif.
+syntax: =SQRT(number)
+args:
+number | Angka yang ingin dicari akar kuadratnya, tidak boleh negatif
+data:
+| Komponen EOQ | Nilai |
+| Kebutuhan per Tahun (unit) | 12,000 |
+| Biaya per Pemesanan | 150,000 |
+| Biaya Simpan per Unit per Tahun | 4,000 |
+formula: =SQRT(2*B2*B3/B4)
+hasil: 948.68, dibulatkan menjadi sekitar 949 unit per pesanan
+jelas: Rumus Economic Order Quantity (EOQ) adalah akar dari (2 × kebutuhan × biaya pesan ÷ biaya simpan). 2 × 12,000 × 150,000 ÷ 4,000 = 900,000. Akar kuadrat dari 900,000 adalah 948.68.
+tip: Gabungkan dengan `ROUNDUP` agar hasilnya bilangan bulat: `=ROUNDUP(SQRT(2*B2*B3/B4), 0)` menghasilkan 949.
+salah: Angka negatif menghasilkan `#NUM!`. Jika datanya bisa negatif, gunakan `=SQRT(ABS(A2))` hanya jika memang secara logika boleh.
+real: Menentukan jumlah pesanan optimal di gudang, menghitung standar deviasi manual, perhitungan jarak koordinat sederhana.
+@@end
+
+## 2.3 Pembulatan
+
+Kantor punya aturan pembulatan yang berbeda-beda. Pajak dibulatkan ke rupiah terdekat, kebutuhan kendaraan selalu dibulatkan ke atas, poin reward selalu dibulatkan ke bawah. Pilih fungsi sesuai aturannya.
+
+| Fungsi | Arah | Contoh | Hasil |
+|---|---|---|---|
+| `ROUND` | Terdekat | `=ROUND(3.45, 1)` | 3.5 |
+| `ROUNDUP` | Selalu naik (menjauhi nol) | `=ROUNDUP(3.41, 1)` | 3.5 |
+| `ROUNDDOWN` | Selalu turun (mendekati nol) | `=ROUNDDOWN(3.49, 1)` | 3.4 |
+| `MROUND` | Kelipatan terdekat | `=MROUND(12730, 500)` | 12,500 |
+| `CEILING` | Naik ke kelipatan | `=CEILING(2.3, 1)` | 3 |
+| `FLOOR` | Turun ke kelipatan | `=FLOOR(2.4, 0.5)` | 2 |
+| `INT` | Turun ke bilangan bulat | `=INT(10.41)` | 10 |
+| `TRUNC` | Potong desimal | `=TRUNC(10.49)` | 10 |
+
+@@fx INT
+fungsi: Membulatkan angka ke bawah menjadi bilangan bulat terdekat. Sering dipakai untuk mengambil hasil bagi bulat.
+syntax: =INT(number)
+args:
+number | Angka yang ingin dibulatkan ke bawah
+data:
+| Produk | Qty (pcs) | Isi per Dus |
+| Air Mineral | 250 | 24 |
+| Mie Instan | 1,000 | 40 |
+| Teh Kotak | 125 | 36 |
+formula: =INT(B2/C2)   // di D2, salin ke D4
+hasil:
+| Produk | Dus Penuh |
+|---|---|
+| Air Mineral | 10 |
+| Mie Instan | 25 |
+| Teh Kotak | 3 |
+jelas: 250 ÷ 24 = 10.41, dibulatkan ke bawah menjadi 10. 125 ÷ 36 = 3.47 menjadi 3. Dipadukan dengan `MOD`, Anda mendapat jumlah dus penuh dan sisa pcs.
+tip: Tampilkan dalam satu teks: `=INT(B2/C2)&" dus + "&MOD(B2,C2)&" pcs"` menghasilkan `10 dus + 10 pcs`.
+salah: Untuk angka negatif, `INT` membulatkan menjauhi nol. `=INT(-3.7)` menghasilkan -4, bukan -3. Jika ingin sekadar membuang desimal, gunakan `TRUNC`.
+real: Menghitung jumlah dus, jumlah minggu penuh dari jumlah hari, atau umur dalam tahun penuh.
+@@end
+
+@@fx TRUNC
+fungsi: Memotong angka pada jumlah desimal tertentu tanpa pembulatan.
+syntax: =TRUNC(number, [num_digits])
+args:
+number | Angka yang dipotong
+[num_digits] | Jumlah desimal yang dipertahankan. Default 0
+data:
+| Keterangan | Nilai |
+| Kurs USD | 15,873.4589 |
+| Koreksi Stok | -2.75 |
+formula:
+=TRUNC(B2, 2)
+=TRUNC(B3)
+=INT(B3)
+hasil:
+15,873.45, lalu -2 untuk `TRUNC`, dan -3 untuk `INT`
+jelas: `TRUNC(B2, 2)` membuang semua digit setelah desimal kedua tanpa melihat digit berikutnya, jadi 15,873.4589 menjadi 15,873.45 (bukan 15,873.46). Untuk -2.75, `TRUNC` hanya membuang desimal sehingga hasilnya -2, sedangkan `INT` membulatkan ke bawah menjadi -3.
+tip: Format angka (Number Format) hanya mengubah tampilan. Nilai asli di cell tetap penuh. Gunakan `TRUNC` atau `ROUND` jika nilai tersimpan memang harus dipotong.
+salah: Menganggap `TRUNC` sama dengan `ROUNDDOWN`. Untuk bilangan positif hasilnya memang sama, tetapi `TRUNC` tidak punya aturan pembulatan sama sekali, hanya memotong.
+real: Kurs yang aturan internalnya dipotong di 2 desimal, konversi satuan yang tidak boleh dibulatkan ke atas, jam kerja yang dipotong.
+@@end
+
+@@fx ROUND
+fungsi: Membulatkan angka ke jumlah digit tertentu dengan aturan standar: 5 ke atas dibulatkan naik.
+syntax: =ROUND(number, num_digits)
+args:
+number | Angka yang dibulatkan
+num_digits | Jumlah digit desimal. 0 = bilangan bulat, 2 = dua desimal, -3 = ribuan terdekat
+data:
+| Keterangan | Nilai |
+| DPP | 1,234,567 |
+| Tarif PPN | 11% |
+formula:
+=ROUND(B2*B3, 0)
+=ROUND(B2, -3)
+hasil:
+PPN = 135,802, dan DPP dibulatkan ke ribuan = 1,235,000
+jelas: 1,234,567 × 11% = 135,802.37. Dengan `num_digits` 0, desimal .37 dibulatkan ke bawah menjadi 135,802. Pada rumus kedua, angka -3 berarti pembulatan ke ribuan: 1,234,567 lebih dekat ke 1,235,000.
+tip: Bulatkan di setiap baris sebelum dijumlahkan jika dokumen resmi (faktur, slip gaji) menampilkan angka per baris. Dengan begitu, total di Excel sama dengan total di dokumen.
+salah: Hanya mengubah tampilan desimal lewat tombol Decrease Decimal. Nilai asli tetap 135,802.37, sehingga total dari banyak baris bisa selisih beberapa rupiah dari angka yang terlihat.
+real: Menghitung PPN dan PPh, membulatkan nilai rupiah di invoice, membulatkan persentase achievement ke satu desimal.
+@@end
+
+@@fx ROUNDUP
+fungsi: Membulatkan angka selalu ke atas (menjauhi nol), berapa pun digit berikutnya.
+syntax: =ROUNDUP(number, num_digits)
+args:
+number | Angka yang dibulatkan
+num_digits | Jumlah digit. 0 = bilangan bulat, -3 = ribuan
+data:
+| Keterangan | Nilai |
+| Jumlah Peserta | 47 |
+| Kapasitas per Mobil | 12 |
+formula: =ROUNDUP(B2/B3, 0)
+hasil: 4 mobil
+jelas: 47 ÷ 12 = 3.92. Tiga mobil hanya menampung 36 orang, jadi hasil harus dibulatkan ke atas menjadi 4. `ROUND` biasa juga menghasilkan 4 di kasus ini, tetapi untuk 37 peserta (3.08) `ROUND` menghasilkan 3 dan satu peserta tertinggal. `ROUNDUP` tetap menghasilkan 4.
+tip: Untuk harga jual ke ribuan di atasnya, gunakan `=ROUNDUP(A2, -3)`. Harga 12,150 menjadi 13,000.
+salah: Memakai `ROUNDUP` untuk pajak. Aturan pembulatan pajak biasanya ke rupiah terdekat (`ROUND`) atau ke bawah, tergantung ketentuan yang berlaku.
+real: Jumlah kendaraan, jumlah kotak kemasan, jumlah lembar kertas, jumlah hari kerja yang dibutuhkan.
+@@end
+
+@@fx ROUNDDOWN
+fungsi: Membulatkan angka selalu ke bawah (mendekati nol).
+syntax: =ROUNDDOWN(number, num_digits)
+args:
+number | Angka yang dibulatkan
+num_digits | Jumlah digit. 0 = bilangan bulat
+data:
+| Keterangan | Nilai |
+| Total Belanja | 187,500 |
+| Belanja per 1 Poin | 10,000 |
+formula: =ROUNDDOWN(B2/B3, 0)
+hasil: 18 poin
+jelas: 187,500 ÷ 10,000 = 18.75. Poin hanya diberikan untuk kelipatan penuh, jadi 0.75 dibuang dan hasilnya 18 poin.
+tip: Untuk bilangan positif, `ROUNDDOWN(x, 0)` sama dengan `INT(x)`. Pilih `ROUNDDOWN` jika Anda juga butuh pembulatan ke desimal tertentu, misalnya `=ROUNDDOWN(A2, 1)`.
+salah: Memakai `ROUNDDOWN` untuk kebutuhan barang. Kebutuhan 3.2 rim kertas yang dibulatkan ke bawah menjadi 3 rim akan membuat stok kurang.
+real: Poin reward, kuota cuti yang dihitung per bulan penuh, jumlah paket utuh yang bisa dikirim.
+@@end
+
+@@fx MROUND
+fungsi: Membulatkan angka ke kelipatan tertentu yang paling dekat, misalnya kelipatan 500 atau 0.25.
+syntax: =MROUND(number, multiple)
+args:
+number | Angka yang dibulatkan
+multiple | Kelipatan tujuan pembulatan
+data:
+| Item | Harga Hitung |
+| Nasi Box A | 12,730 |
+| Nasi Box B | 18,260 |
+| Snack Box | 9,250 |
+formula: =MROUND(B2, 500)   // di C2, salin ke C4
+hasil:
+| Item | Harga Jual |
+|---|---|
+| Nasi Box A | 12,500 |
+| Nasi Box B | 18,500 |
+| Snack Box | 9,500 |
+jelas: 12,730 lebih dekat ke 12,500 (selisih 230) daripada ke 13,000 (selisih 270). 18,260 lebih dekat ke 18,500. Untuk 9,250 yang berada tepat di tengah 9,000 dan 9,500, `MROUND` membulatkan ke atas.
+tip: Untuk membulatkan durasi kerja ke 15 menit terdekat, gunakan `=MROUND(A2, "0:15")` pada cell berformat waktu.
+salah: `number` dan `multiple` harus bertanda sama. `=MROUND(-12730, 500)` menghasilkan `#NUM!`.
+real: Harga jual kelipatan 500 atau 1,000, pembulatan jam kerja ke 0.25 jam, pembulatan panjang kabel ke kelipatan 50 meter.
+@@end
+
+@@fx CEILING
+fungsi: Membulatkan angka ke atas ke kelipatan tertentu.
+syntax: =CEILING(number, significance)
+args:
+number | Angka yang dibulatkan
+significance | Kelipatan tujuan
+data:
+| No Resi | Berat (kg) | Tarif per kg |
+| RS-2201 | 2.3 | 9,000 |
+| RS-2202 | 0.8 | 9,000 |
+| RS-2203 | 5 | 9,000 |
+formula:
+=CEILING(B2, 1)        // berat tagih, di D2
+=CEILING(B2, 1)*C2     // ongkir, di E2
+hasil:
+| No Resi | Berat Tagih | Ongkir |
+|---|---|---|
+| RS-2201 | 3 | 27,000 |
+| RS-2202 | 1 | 9,000 |
+| RS-2203 | 5 | 45,000 |
+jelas: Ekspedisi menagih per kg penuh. Berat 2.3 kg ditagih 3 kg, 0.8 kg ditagih 1 kg. Berat 5 kg sudah kelipatan 1, jadi tetap 5.
+tip: Excel 2013 ke atas punya `CEILING.MATH` yang tidak perlu argument kedua jika kelipatannya 1: `=CEILING.MATH(B2)`. Fungsi ini juga lebih konsisten untuk angka negatif.
+salah: Memakai `ROUNDUP(B2, 0)` untuk kelipatan selain 1. `ROUNDUP` hanya bekerja per digit desimal, sedangkan `CEILING` bisa ke kelipatan apa pun, misalnya 0.5 atau 50.
+real: Berat tagih pengiriman, durasi sewa per jam penuh, pembelian material per kemasan standar.
+@@end
+
+@@fx FLOOR
+fungsi: Membulatkan angka ke bawah ke kelipatan tertentu.
+syntax: =FLOOR(number, significance)
+args:
+number | Angka yang dibulatkan
+significance | Kelipatan tujuan
+data:
+| Karyawan | Jam Lembur |
+| Rudi | 2.4 |
+| Tono | 3.75 |
+| Vina | 1.9 |
+formula: =FLOOR(B2, 0.5)   // di C2, salin ke C4
+hasil:
+| Karyawan | Jam Dibayar |
+|---|---|
+| Rudi | 2 |
+| Tono | 3.5 |
+| Vina | 1.5 |
+jelas: Perusahaan membayar lembur per 30 menit penuh. 2.4 jam turun ke 2 jam, 3.75 jam turun ke 3.5 jam, dan 1.9 jam turun ke 1.5 jam.
+tip: Versi modern `FLOOR.MATH` (Excel 2013+) tersedia dengan perilaku lebih konsisten untuk angka negatif.
+salah: Jam lembur yang dicatat dalam format waktu (misalnya 2:24) harus diubah dulu ke jam desimal dengan `*24` sebelum memakai kelipatan 0.5. Lihat BAB 5.
+real: Jam lembur per 30 menit, pembayaran komisi per kelipatan target, pembulatan harga ke bawah untuk promo.
+@@end
+
+## 2.4 Statistik dan Rata-rata
+
+@@card AVERAGE, MAX, MIN (lanjutan BAB 1)
+=MAX(C2:C7)-MIN(C2:C7)   // rentang (range) nilai
+Selisih nilai terbesar dan terkecil menunjukkan seberapa lebar sebaran data. Untuk penjualan pada studi kasus di akhir BAB ini, hasilnya 51,200,000 - 27,300,000 = 23,900,000. Pembahasan lengkap `AVERAGE`, `MAX`, dan `MIN` ada di BAB 1.
+@@end
+
+@@fx AVERAGEIF
+fungsi: Menghitung rata-rata dari data yang memenuhi satu kriteria.
+syntax: =AVERAGEIF(range, criteria, [average_range])
+args:
+range | Range yang diperiksa kriterianya
+criteria | Syarat yang harus dipenuhi
+[average_range] | Range yang dirata-ratakan. Jika kosong, `range` yang dipakai
+data:
+| Karyawan | Dept | Status | Skor KPI |
+| Andi | Sales | Tetap | 82 |
+| Bella | Finance | Tetap | 90 |
+| Citra | Sales | Kontrak | 76 |
+| Dimas | IT | Tetap | 88 |
+| Eka | Finance | Kontrak | 84 |
+| Fani | Sales | Tetap | 91 |
+formula:
+=AVERAGEIF(B2:B7, "Sales", D2:D7)
+=AVERAGEIF(D2:D7, ">=85")
+hasil:
+83 untuk departemen Sales, dan 89.67 untuk rata-rata skor yang minimal 85
+jelas: Karyawan Sales adalah Andi (82), Citra (76), dan Fani (91). Rata-ratanya (82 + 76 + 91) ÷ 3 = 83. Rumus kedua tidak memakai `average_range`, jadi kolom D sekaligus diperiksa dan dirata-ratakan: (90 + 88 + 91) ÷ 3 = 89.67.
+tip: `=AVERAGEIF(D2:D7, "<>0")` menghitung rata-rata tanpa angka nol. Ini berguna jika nol berarti "belum diisi".
+salah: Jika tidak ada satu pun data yang cocok, hasilnya `#DIV/0!`. Bungkus dengan `IFERROR` bila kriteria bisa kosong.
+real: Rata-rata skor per departemen, rata-rata nilai transaksi per cabang, rata-rata lama pengerjaan per jenis pekerjaan.
+@@end
+
+@@fx AVERAGEIFS
+fungsi: Menghitung rata-rata dari data yang memenuhi beberapa kriteria sekaligus.
+syntax: =AVERAGEIFS(average_range, criteria_range1, criteria1, [criteria_range2, criteria2], ...)
+args:
+average_range | Range yang dirata-ratakan (ditulis paling depan)
+criteria_range1, criteria1 | Pasangan range dan syarat pertama
+[criteria_range2, criteria2] | Pasangan berikutnya
+data:
+| Karyawan | Dept | Status | Skor KPI |
+| Andi | Sales | Tetap | 82 |
+| Bella | Finance | Tetap | 90 |
+| Citra | Sales | Kontrak | 76 |
+| Dimas | IT | Tetap | 88 |
+| Eka | Finance | Kontrak | 84 |
+| Fani | Sales | Tetap | 91 |
+formula: =AVERAGEIFS(D2:D7, B2:B7, "Sales", C2:C7, "Tetap")
+hasil: 86.5
+jelas: Baris yang memenuhi dua syarat (Sales dan Tetap) adalah Andi (82) dan Fani (91). Rata-ratanya (82 + 91) ÷ 2 = 86.5. Citra tidak ikut karena statusnya Kontrak.
+tip: Susunan argument `AVERAGEIFS` sama persis dengan `SUMIFS` dan `COUNTIFS`. Hafalkan satu pola, tiga fungsi langsung bisa dipakai.
+salah: Tertukar menulis `average_range` di belakang seperti pada `AVERAGEIF`. Pada versi -IFS, range yang dihitung selalu di depan.
+real: Rata-rata gaji karyawan tetap per departemen, rata-rata waktu penyelesaian tiket prioritas tinggi per tim.
+@@end
+
+@@fx MEDIAN
+fungsi: Mengambil nilai tengah setelah data diurutkan. Median tidak terpengaruh nilai ekstrem, berbeda dengan rata-rata.
+syntax: =MEDIAN(number1, [number2], ...)
+args:
+number1 | Angka atau range pertama
+[number2] | Angka atau range tambahan
+data:
+| Posisi | Gaji |
+| Staff Admin | 5,200,000 |
+| Staff Gudang | 5,500,000 |
+| Staff Finance | 5,800,000 |
+| Staff HR | 6,100,000 |
+| Manager | 18,500,000 |
+formula:
+=MEDIAN(B2:B6)
+=AVERAGE(B2:B6)
+hasil:
+Median 5,800,000, sedangkan rata-rata 8,220,000
+jelas: Setelah diurutkan, nilai ketiga dari lima data adalah 5,800,000. Rata-rata melonjak ke 8,220,000 karena satu gaji manager yang jauh lebih tinggi. Median lebih mewakili gaji "umum" di tim ini.
+tip: Jika jumlah data genap, `MEDIAN` mengambil rata-rata dua nilai tengah. Untuk 4 data 10, 20, 30, 40, hasilnya 25.
+salah: Melaporkan rata-rata gaji atau rata-rata harga rumah tanpa memeriksa nilai ekstrem. Tampilkan median di samping rata-rata agar pembaca laporan tidak salah tangkap.
+real: Analisis gaji, harga pasar material, lama pengerjaan proyek yang punya beberapa kasus sangat terlambat.
+@@end
+
+@@fx MODE
+fungsi: Mengambil angka yang paling sering muncul (modus).
+syntax: =MODE(number1, [number2], ...)
+args:
+number1 | Angka atau range pertama
+[number2] | Angka atau range tambahan
+data:
+| Karyawan | Ukuran Sepatu |
+| Andi | 40 |
+| Bella | 41 |
+| Citra | 42 |
+| Dimas | 41 |
+| Eka | 43 |
+| Fani | 41 |
+| Gilang | 42 |
+formula: =MODE(B2:B8)
+hasil: 41
+jelas: Ukuran 41 muncul tiga kali, lebih banyak dari ukuran lain. Informasi ini membantu bagian pengadaan menentukan stok terbanyak.
+tip: Excel 2010 ke atas menyediakan `MODE.SNGL` (sama dengan `MODE`) dan `MODE.MULT` untuk menampilkan semua modus jika ada lebih dari satu angka dengan frekuensi tertinggi.
+salah: `MODE` hanya bekerja untuk angka. Untuk mencari teks yang paling sering muncul (misalnya nama kota), gunakan kombinasi `INDEX`, `MATCH`, dan `COUNTIF` di BAB 6 dan 9.
+real: Ukuran seragam paling banyak, nominal transaksi yang paling sering, jam kedatangan paling umum.
+@@end
+
+## 2.5 Top List dan Ranking
+
+`LARGE`, `SMALL`, dan `RANK` memakai data penjualan yang sama supaya hasilnya mudah dibandingkan.
+
+@@fx LARGE
+fungsi: Mengambil nilai terbesar ke-k. `LARGE(range, 1)` sama dengan `MAX`, `LARGE(range, 2)` adalah nilai terbesar kedua, dan seterusnya.
+syntax: =LARGE(array, k)
+args:
+array | Range angka
+k | Urutan yang diinginkan dari yang terbesar
+data:
+| Sales | Penjualan |
+| Andi | 45,000,000 |
+| Bella | 32,500,000 |
+| Candra | 51,200,000 |
+| Dewi | 38,700,000 |
+| Eko | 27,300,000 |
+| Fajar | 40,100,000 |
+formula:
+=LARGE($B$2:$B$7, 1)
+=LARGE($B$2:$B$7, 2)
+=LARGE($B$2:$B$7, 3)
+hasil: Top 1 = 51,200,000, Top 2 = 45,000,000, Top 3 = 40,100,000
+jelas: Excel mengurutkan penjualan dari terbesar secara internal, lalu mengambil posisi ke-1, ke-2, dan ke-3. Data asli tidak berubah urutannya.
+tip: Buat angka 1, 2, 3 di kolom D, lalu tulis `=LARGE($B$2:$B$7, D2)` dan salin ke bawah. Nama sales pemilik nilai tersebut bisa diambil dengan `INDEX` + `MATCH` di BAB 6.
+salah: Jika k lebih besar dari jumlah data (misalnya `k=7` untuk 6 data), hasilnya `#NUM!`.
+real: Top 5 customer, top 10 produk terlaris, tiga proyek dengan nilai kontrak terbesar.
+@@end
+
+@@fx SMALL
+fungsi: Mengambil nilai terkecil ke-k. Kebalikan dari `LARGE`.
+syntax: =SMALL(array, k)
+args:
+array | Range angka
+k | Urutan yang diinginkan dari yang terkecil
+data:
+| Sales | Penjualan |
+| Andi | 45,000,000 |
+| Bella | 32,500,000 |
+| Candra | 51,200,000 |
+| Dewi | 38,700,000 |
+| Eko | 27,300,000 |
+| Fajar | 40,100,000 |
+formula:
+=SMALL($B$2:$B$7, 1)
+=SMALL($B$2:$B$7, 2)
+hasil: Terendah pertama = 27,300,000, terendah kedua = 32,500,000
+jelas: Nilai terkecil adalah milik Eko (27,300,000), disusul Bella (32,500,000).
+tip: `SMALL` pada kolom tanggal menghasilkan tanggal paling awal ke-k. Berguna untuk mencari tiga jadwal terdekat.
+salah: Cell kosong diabaikan, tetapi angka 0 tetap dihitung. Sales yang belum input penjualan (diisi 0) akan selalu menjadi "terendah".
+real: Tiga penawaran vendor termurah, lima SKU dengan stok paling sedikit, tanggal jatuh tempo terdekat.
+@@end
+
+@@fx RANK
+fungsi: Menentukan peringkat suatu angka di dalam daftar.
+syntax: =RANK(number, ref, [order])
+args:
+number | Angka yang dicari peringkatnya
+ref | Range seluruh angka pembanding (kunci dengan `$`)
+[order] | 0 atau kosong = terbesar peringkat 1. Angka 1 = terkecil peringkat 1
+data:
+| Sales | Penjualan |
+| Andi | 45,000,000 |
+| Bella | 32,500,000 |
+| Candra | 51,200,000 |
+| Dewi | 38,700,000 |
+| Eko | 27,300,000 |
+| Fajar | 40,100,000 |
+formula: =RANK(B2, $B$2:$B$7, 0)   // di C2, salin ke C7
+hasil:
+| Sales | Peringkat |
+|---|---|
+| Andi | 2 |
+| Bella | 5 |
+| Candra | 1 |
+| Dewi | 4 |
+| Eko | 6 |
+| Fajar | 3 |
+jelas: Candra punya penjualan terbesar sehingga peringkat 1. Andi di urutan kedua. Range dikunci dengan `$` agar pembandingnya tetap saat rumus disalin.
+tip: Excel 2010 ke atas punya `RANK.EQ` (identik dengan `RANK`) dan `RANK.AVG` yang memberi peringkat rata-rata untuk nilai kembar. Dua nilai kembar di posisi 2 dan 3 akan sama-sama mendapat 2.5.
+salah: Lupa mengunci `ref`. Saat disalin ke bawah, range ikut bergeser menjadi `B3:B8`, `B4:B9`, dan peringkat menjadi kacau.
+real: Ranking sales bulanan, peringkat vendor berdasarkan skor evaluasi, urutan prioritas proyek berdasarkan nilai kontrak.
+@@end
+
+@@case Analisis Penjualan Bulanan
+problem: Sales manager ingin melihat performa enam sales pada bulan Juni: total target dan realisasi, rata-rata penjualan, penjualan tertinggi dan terendah, achievement tiap sales, dan peringkat berdasarkan achievement. Laporan harus diperbarui setiap bulan hanya dengan mengganti angka target dan actual.
+data:
+| Sales | Target | Actual |
+| Andi | 50,000,000 | 45,000,000 |
+| Bella | 30,000,000 | 32,500,000 |
+| Candra | 50,000,000 | 51,200,000 |
+| Dewi | 40,000,000 | 38,700,000 |
+| Eko | 35,000,000 | 27,300,000 |
+| Fajar | 40,000,000 | 40,100,000 |
+formula:
+Kolom D (Achievement) dan E (Rank), isi di baris 2 lalu salin ke baris 7:
+
+```excel
+=ROUND(C2/B2, 4)              // D2, format Percentage 2 desimal
+=RANK(D2, $D$2:$D$7, 0)       // E2
+```
+
+Ringkasan di area terpisah:
+
+| Ringkasan | Formula |
+|---|---|
+| Total Target | `=SUM(B2:B7)` |
+| Total Actual | `=SUM(C2:C7)` |
+| Achievement Tim | `=C9/B9` (C9 dan B9 berisi total) |
+| Rata-rata Actual | `=AVERAGE(C2:C7)` |
+| Actual Tertinggi | `=MAX(C2:C7)` |
+| Actual Terendah | `=MIN(C2:C7)` |
+| Jumlah Sales Capai Target | `=COUNTIF(D2:D7, ">=1")` |
+result:
+@sheet A1
+| Sales | Target | Actual | Achievement | Rank |
+| Andi | 50,000,000 | 45,000,000 | 90.00% | 5 |
+| Bella | 30,000,000 | 32,500,000 | 108.33% | 1 |
+| Candra | 50,000,000 | 51,200,000 | 102.40% | 2 |
+| Dewi | 40,000,000 | 38,700,000 | 96.75% | 4 |
+| Eko | 35,000,000 | 27,300,000 | 78.00% | 6 |
+| Fajar | 40,000,000 | 40,100,000 | 100.25% | 3 |
+
+| Ringkasan | Hasil |
+|---|---|
+| Total Target | 245,000,000 |
+| Total Actual | 234,800,000 |
+| Achievement Tim | 95.84% |
+| Rata-rata Actual | 39,133,333 |
+| Actual Tertinggi | 51,200,000 |
+| Actual Terendah | 27,300,000 |
+| Jumlah Sales Capai Target | 3 |
+explain:
+Achievement dihitung dari actual dibagi target, lalu dibulatkan 4 digit agar tampil rapi sebagai persen dengan 2 desimal. Peringkat disusun dari achievement, bukan dari nominal actual. Hasilnya berbeda: Candra punya actual terbesar, tetapi Bella yang paling tinggi achievement-nya karena targetnya lebih kecil.
+
+Achievement tim dihitung dari total actual dibagi total target (234,800,000 ÷ 245,000,000 = 95.84%). Angka ini berbeda dari rata-rata achievement enam sales (95.96%), karena target tiap sales tidak sama besar. Untuk laporan manajemen, pakai total dibagi total.
+challenge:
+1. Hitung total actual dari sales yang sudah mencapai target (achievement minimal 100%).
+2. Tampilkan rata-rata actual yang dibulatkan ke ratusan ribu terdekat.
+3. Tampilkan achievement terbesar kedua.
+answer:
+```excel
+=SUMIF(D2:D7, ">=1", C2:C7)        // 123,800,000
+=ROUND(AVERAGE(C2:C7), -5)         // 39,100,000
+=LARGE(D2:D7, 2)                   // 102.40%
+```
+Sales yang mencapai target adalah Bella, Candra, dan Fajar: 32,500,000 + 51,200,000 + 40,100,000 = 123,800,000. Rata-rata 39,133,333 dibulatkan ke ratusan ribu menjadi 39,100,000.
+@@end
+
+:::challenge LATIHAN BAB 2
+15 soal latihan BAB ini ada di bagian [Practice Questions](#150-practice-questions). Soal memakai data studi kasus di atas.
+:::

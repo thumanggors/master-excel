@@ -1,0 +1,328 @@
+@@chapter 08 | DATA CLEANING & VALIDATION
+desc: Rumus secanggih apa pun akan menghasilkan angka salah jika datanya kotor. BAB ini membahas cara mendeteksi masalah data (cell kosong, duplikat, spasi, typo, tanggal dan angka yang tersimpan sebagai teks), memperbaikinya dengan rumus, lalu mencegahnya muncul lagi dengan Data Validation.
+goals:
+- Mengenali tujuh masalah data yang paling sering muncul
+- Memakai fungsi IS untuk memeriksa tipe dan kondisi data
+- Membersihkan spasi, karakter tersembunyi, dan typo
+- Mengubah tanggal dan angka berformat teks menjadi nilai yang benar
+- Menyusun alur RAW DATA → CLEANING → VALIDATED DATA
+extra: + 3 fungsi pembersih lanjutan dari BAB 4
+@@end
+
+## 8.1 Tujuh Masalah Data yang Paling Sering Muncul
+
+| Masalah | Gejala | Cara Deteksi | Cara Perbaikan |
+|---|---|---|---|
+| Data kosong | Total atau jumlah data tidak sesuai | `ISBLANK`, `COUNTBLANK` | Lengkapi dari sumber, atau tandai |
+| Duplikat | Customer atau transaksi terhitung dua kali | `COUNTIF(...)>1` | Tandai, lalu Remove Duplicates |
+| Spasi berlebih | Lookup gagal padahal data terlihat ada | `LEN(A2)<>LEN(TRIM(A2))` | `TRIM`, `SUBSTITUTE(CHAR(160))` |
+| Typo dan variasi ejaan | "Jkt", "Jakrta", "DKI Jakarta" dianggap berbeda | `UNIQUE` lalu periksa daftar | Tabel pemetaan + lookup |
+| Tanggal berformat teks | Tanggal rata kiri, tidak bisa dihitung | `ISNUMBER` bernilai FALSE | `DATE` + `LEFT`/`MID`/`RIGHT` |
+| Angka berformat teks | `SUM` menghasilkan 0 atau terlalu kecil | `ISTEXT`, `ISNUMBER` | `VALUE`, `--`, Text to Columns |
+| Input tidak sesuai aturan | HP 7 digit, email tanpa @ | Rumus validasi dengan `LEN`, `FIND` | Data Validation untuk input berikutnya |
+
+:::important
+Jangan pernah membersihkan data langsung di kolom aslinya. Simpan data mentah (RAW) apa adanya, lakukan pembersihan di kolom atau sheet baru, lalu salin hasil akhir sebagai values. Dengan begitu, setiap langkah bisa diperiksa ulang.
+:::
+
+## 8.2 Fungsi IS untuk Memeriksa Data
+
+Fungsi IS selalu menghasilkan TRUE atau FALSE. Hasil ini bisa dipakai di `IF`, di Conditional Formatting, atau dihitung dengan `SUMPRODUCT(--ISxxx(range))`.
+
+@@fx ISBLANK
+fungsi: Menghasilkan TRUE jika cell benar-benar kosong.
+syntax: =ISBLANK(value)
+args:
+value | Cell yang diperiksa
+data:
+| ID | Email |
+| CST-0012 | budi.santoso@gmail.com |
+| CST-0007 | |
+| CST-0105 | andi.w@ptmaju.co.id |
+formula:
+=ISBLANK(B2)
+=COUNTBLANK(B2:B4)
+hasil: FALSE, TRUE, FALSE, dan jumlah cell kosong = 1
+jelas: Hanya B3 yang kosong. `COUNTBLANK` meringkas pemeriksaan satu kolom menjadi satu angka.
+tip: Untuk menandai baris yang belum lengkap, gunakan Conditional Formatting dengan rumus `=ISBLANK($B2)` pada seluruh baris data.
+salah: Cell berisi rumus yang menghasilkan teks kosong `""` tidak dianggap kosong oleh `ISBLANK` (hasilnya FALSE), tetapi dihitung oleh `COUNTBLANK`. Untuk pemeriksaan yang konsisten, gunakan `=LEN(B2)=0` atau `=B2=""`.
+real: Mengecek kelengkapan formulir, dokumen yang belum diunggah, kolom wajib yang belum diisi sebelum data diimpor.
+@@end
+
+@@fx ISNUMBER
+fungsi: Menghasilkan TRUE jika isi cell adalah angka (termasuk tanggal dan waktu).
+syntax: =ISNUMBER(value)
+args:
+value | Cell atau rumus yang diperiksa
+data:
+@cap Tanda ' di depan berarti nilai tersimpan sebagai teks
+| Item | Qty |
+| Kabel FO | 25 |
+| Closure | '25 |
+| ODP | dua puluh |
+formula:
+=ISNUMBER(B2)
+=SUMPRODUCT(--NOT(ISNUMBER(B2:B4)))
+hasil: TRUE, FALSE, FALSE, dan jumlah qty bukan angka = 2
+jelas: Hanya B2 yang benar-benar angka. `'25` tampak seperti angka tetapi tersimpan sebagai teks, sehingga tidak ikut dijumlahkan oleh `SUM`. Rumus kedua menghitung berapa cell yang bermasalah di satu kolom.
+tip: `ISNUMBER` juga pasangan standar untuk `SEARCH` dan `MATCH`: `=ISNUMBER(MATCH(A2, Master!A:A, 0))` berarti "data ada di master".
+salah: Memeriksa tanggal hasil impor dengan mata. Tanggal teks dan tanggal asli bisa terlihat sama persis. Gunakan `ISNUMBER`: tanggal asli menghasilkan TRUE.
+real: Validasi kolom qty, harga, dan tanggal sebelum dihitung. Mengecek hasil konversi `VALUE`.
+@@end
+
+@@fx ISTEXT
+fungsi: Menghasilkan TRUE jika isi cell adalah teks.
+syntax: =ISTEXT(value)
+args:
+value | Cell yang diperiksa
+data:
+| Karyawan | NIK (16 digit) |
+| Rudi | 3171234567890001 |
+| Sari | '3171234567890002 |
+formula: =ISTEXT(B2)
+hasil: Rudi FALSE, Sari TRUE
+jelas: NIK Rudi diketik sebagai angka. Excel hanya menyimpan 15 digit angka yang presisi, sehingga digit ke-16 berubah menjadi 0 (tersimpan 3171234567890000) dan tampil sebagai 3.17123E+15. NIK Sari diketik sebagai teks, sehingga seluruh 16 digit aman.
+tip: Nomor yang tidak dihitung (NIK, nomor rekening, nomor HP, kode pos) sebaiknya disimpan sebagai teks. Format kolomnya sebagai Text sebelum data diketik atau diimpor.
+salah: Mengubah format kolom menjadi Text setelah angka 16 digit terlanjur diketik. Digit yang sudah hilang tidak kembali. Data harus diinput ulang.
+real: Validasi kolom NIK, nomor rekening, dan ID pelanggan agar tidak rusak.
+@@end
+
+@@fx ISERROR
+fungsi: Menghasilkan TRUE jika nilai berupa error apa pun: `#N/A`, `#VALUE!`, `#REF!`, `#DIV/0!`, `#NUM!`, `#NAME?`, atau `#NULL!`.
+syntax: =ISERROR(value)
+args:
+value | Cell atau rumus yang diperiksa
+data:
+| Hasil Rumus |
+| 0.9 |
+| #DIV/0! |
+| #N/A |
+| #VALUE! |
+formula:
+=ISERROR(A2)
+=SUMPRODUCT(--ISERROR(A2:A5))
+hasil: FALSE, TRUE, TRUE, TRUE, dan jumlah error = 3
+jelas: Semua jenis error menghasilkan TRUE. `SUMPRODUCT` dengan `--` mengubah TRUE menjadi 1 lalu menjumlahkannya.
+tip: Pasang ringkasan jumlah error di bagian atas laporan: `=SUMPRODUCT(--ISERROR(D2:D10001))`. Jika angkanya bukan 0, ada rumus yang perlu diperiksa sebelum laporan dikirim.
+salah: `SUM` atas range yang berisi error ikut menjadi error. Temukan dan perbaiki sumber errornya, jangan hanya disembunyikan.
+real: Audit rumus sebelum laporan dikirim, penanda baris bermasalah di data impor.
+@@end
+
+@@fx ISNA
+fungsi: Menghasilkan TRUE hanya untuk error `#N/A`, yaitu error "data tidak ditemukan".
+syntax: =ISNA(value)
+args:
+value | Cell atau rumus yang diperiksa
+data:
+| Invoice Sistem A | | Invoice Sistem B |
+| INV-01 | | INV-01 |
+| INV-02 | | INV-03 |
+| INV-03 | | |
+| INV-04 | | |
+formula: =ISNA(MATCH(A2, $C$2:$C$3, 0))
+hasil: INV-01 FALSE, INV-02 TRUE, INV-03 FALSE, INV-04 TRUE
+jelas: `MATCH` mencari setiap invoice sistem A di daftar sistem B. INV-02 dan INV-04 tidak ditemukan sehingga `MATCH` menghasilkan `#N/A`, dan `ISNA` mengubahnya menjadi TRUE. Artinya, dua invoice itu belum tercatat di sistem B.
+tip: Ubah hasilnya menjadi label yang jelas: `=IF(ISNA(MATCH(A2, $C$2:$C$3, 0)), "Tidak ada di B", "OK")`.
+salah: Memakai `ISERROR` untuk rekonsiliasi. Jika rumus `MATCH` salah tulis sehingga `#REF!`, `ISERROR` tetap TRUE dan terlihat seperti "data tidak ditemukan". `ISNA` hanya bereaksi pada `#N/A`.
+real: Rekonsiliasi dua sistem, pengecekan data yang belum ada di master, pencocokan daftar peserta.
+@@end
+
+@@fx ISERR
+fungsi: Menghasilkan TRUE untuk semua error kecuali `#N/A`.
+syntax: =ISERR(value)
+args:
+value | Cell atau rumus yang diperiksa
+data:
+| Hasil Rumus |
+| 0.9 |
+| #DIV/0! |
+| #N/A |
+| #VALUE! |
+formula: =ISERR(A2)
+hasil: FALSE, TRUE, FALSE, TRUE
+jelas: `#N/A` dikecualikan. Hasil TRUE hanya muncul untuk `#DIV/0!` dan `#VALUE!`.
+tip: Gunakan di laporan lookup: `#N/A` berarti data memang belum ada (wajar), sedangkan error lain berarti ada rumus yang rusak. `=SUMPRODUCT(--ISERR(D2:D1000))` menghitung rumus rusak saja.
+salah: Tertukar antara `ISERR` dan `ISERROR`. Ingat: `ISERR` lebih pendek karena "mengecualikan satu", yaitu `#N/A`.
+real: Audit rumus lookup di laporan besar, memisahkan data belum lengkap dari rumus yang salah.
+@@end
+
+@@fx ISLOGICAL
+fungsi: Menghasilkan TRUE jika isi cell adalah nilai logika TRUE atau FALSE (bukan teks "TRUE").
+syntax: =ISLOGICAL(value)
+args:
+value | Cell yang diperiksa
+data:
+@cap Kolom Aktif hasil impor CSV. Tanda ' berarti teks
+| Customer | Aktif |
+| CST-0012 | TRUE |
+| CST-0007 | 'TRUE |
+| CST-0105 | 1 |
+| CST-0200 | FALSE |
+formula: =ISLOGICAL(B2)
+hasil: TRUE, FALSE, FALSE, TRUE
+jelas: Hanya B2 dan B5 yang berisi nilai logika asli. `'TRUE` adalah teks, dan angka 1 adalah angka. Keduanya akan berperilaku berbeda di `COUNTIF(B2:B5, TRUE)` dan di `FILTER`.
+tip: Seragamkan dengan rumus: `=OR(B2=TRUE, B2=1, UPPER(B2)="TRUE", UPPER(B2)="YA")`. Hasilnya selalu nilai logika asli.
+salah: Menghitung customer aktif dengan `COUNTIF(B:B, TRUE)` pada data campuran. Teks "TRUE" tidak ikut terhitung.
+real: Validasi kolom flag (aktif, lunas, disetujui) dari file impor, pengecekan checkbox.
+@@end
+
+## 8.3 Fungsi Pembersih (Lanjutan BAB 4)
+
+@@card TRIM + CHAR(160)
+=TRIM(SUBSTITUTE(A2, CHAR(160), " "))
+`TRIM` hanya membuang spasi biasa (karakter 32). Data dari halaman web atau email sering membawa non-breaking space (karakter 160) yang tidak ikut terbuang. Ganti dulu karakter 160 menjadi spasi biasa, baru jalankan `TRIM`. Pembahasan dasar `TRIM` ada di BAB 4.
+@@end
+
+@@card CLEAN + TRIM
+=TRIM(CLEAN(A2))
+Kombinasi standar untuk data hasil impor: `CLEAN` membuang karakter tak tercetak seperti line break dan tab, lalu `TRIM` merapikan spasi. Jika line break berada di antara dua kata, gunakan `=TRIM(SUBSTITUTE(A2, CHAR(10), " "))` supaya kata tidak menempel.
+@@end
+
+@@card SUBSTITUTE untuk typo
+=SUBSTITUTE(SUBSTITUTE(PROPER(TRIM(A2)), "Jkt", "Jakarta"), "Jakrta", "Jakarta")
+Cocok untuk satu atau dua variasi typo. Jika variasinya banyak, buat tabel pemetaan (kolom Variasi dan kolom Baku), lalu gunakan `=IFERROR(VLOOKUP(PROPER(TRIM(A2)), Peta, 2, FALSE), PROPER(TRIM(A2)))`. Tabel lebih mudah dirawat daripada `SUBSTITUTE` bertumpuk.
+@@end
+
+## 8.4 Teknik Perbaikan Data
+
+### Duplikat
+
+```excel
+=COUNTIF($A$2:$A$10001, A2)>1        // TRUE untuk semua baris yang kodenya muncul lebih dari sekali
+=COUNTIF($A$2:A2, A2)>1              // TRUE hanya untuk kemunculan kedua dan seterusnya
+```
+
+Rumus kedua memakai range yang "tumbuh" (`$A$2:A2`, lalu `$A$2:A3`, dan seterusnya). Kemunculan pertama tetap dianggap data asli, sedangkan kemunculan berikutnya ditandai sebagai duplikat.
+
+:::warn
+Pada 10.000 baris atau lebih, rumus `COUNTIF` dengan range tumbuh bisa membuat file terasa lambat. Setelah penanda duplikat selesai dipakai, salin kolomnya sebagai values. Untuk menghapus duplikat tanpa rumus, gunakan Data > Remove Duplicates pada salinan data.
+:::
+
+### Tanggal berformat teks
+
+Data impor sering menyimpan tanggal sebagai teks `15/06/2026` (hari/bulan/tahun). Susun ulang dengan `DATE`:
+
+```excel
+=DATE(RIGHT(A2,4), MID(A2,4,2), LEFT(A2,2))
+// "15/06/2026" menjadi tanggal asli 15 Jun 2026
+```
+
+Rumus ini hanya benar jika formatnya selalu dua digit hari, dua digit bulan, dan empat digit tahun. Periksa hasilnya dengan `ISNUMBER`.
+
+### Angka berformat teks
+
+```excel
+=VALUE(TRIM(A2))     // mengubah teks angka menjadi angka
+=--TRIM(A2)          // cara singkat, hasil sama
+```
+
+### Data Validation berbasis rumus
+
+Buka Data > Data Validation, pilih **Custom**, lalu isi rumus berikut. Input yang tidak memenuhi aturan akan ditolak.
+
+| Aturan | Rumus Custom (untuk cell A2) |
+|---|---|
+| HP 10-13 digit angka | `=AND(ISNUMBER(--A2), LEN(A2)>=10, LEN(A2)<=13)` |
+| Email berisi satu @ dan titik setelahnya | `=AND(LEN(A2)-LEN(SUBSTITUTE(A2,"@",""))=1, ISNUMBER(FIND(".", A2, FIND("@", A2))))` |
+| Kode tidak boleh duplikat | `=COUNTIF($A:$A, A2)=1` |
+| Tanggal dalam tahun 2026 | `=AND(A2>=DATE(2026,1,1), A2<=DATE(2026,12,31))` |
+| Kode wajib huruf kapital | `=EXACT(A2, UPPER(A2))` |
+
+:::tip
+Isi tab **Error Alert** di Data Validation dengan pesan yang jelas, misalnya "Nomor HP harus 10-13 digit tanpa spasi". Pengguna langsung tahu cara memperbaiki inputnya.
+:::
+
+@@case Cleaning Database 10.000 Customer
+problem: Tim CRM menerima file 10.000 customer (baris 2 sampai 10001) gabungan dari beberapa cabang. Data harus dibersihkan dan diperiksa sebelum diimpor ke sistem baru. Hanya baris yang lolos semua pemeriksaan yang boleh diimpor, sedangkan sisanya dikembalikan ke cabang dengan keterangan masalahnya. Contoh di bawah menampilkan 8 baris pertama. Semua rumus ditulis untuk rentang penuh.
+data:
+@cap RAW DATA. Tanda · = spasi, tanda ' = nilai tersimpan sebagai teks
+| ID | Nama | No HP | Email | Kota | Tgl Daftar | Belanja |
+| CST-0001 | ··andi··pratama | 0812-1111-2222 | Andi.P@gmail.com | jakarta | 03/01/2026 | '1250000 |
+| CST-0002 | Siti Aminah | +62 813 3333 4444 | siti.aminah@yahoo | Jkt | 15/02/2026 | '875000 |
+| CST-0003 | BUDI HARTONO | 0857 5555 666 | budi.h@ptmaju.co.id | Bandung | 28/02/2026 | '2300000 |
+| CST-0001 | Andi Pratama | 081211112222 | andi.p@gmail.com | Jakarta | 03/01/2026 | '1250000 |
+| CST-0004 | | 0819-7777-8888 | rina@outlook.com | Surabaya | 10/03/2026 | '560000 |
+| CST-0005 | dewi lestari | 0812 999 | dewi.lestari@gmail.com | surabaya· | 31/03/2026 | '- |
+| CST-0006 | Rudi Hartono | 6285612345678 | rudi@@gmail.com | Jakrta | 05/04/2026 | '990000 |
+| CST-0007 | Maya Sari | 0813-2222-3333 | maya.sari@gmail.com | Bandung | 12/04/2026 | '1430000 |
+formula:
+**Tahap 1. CLEANING** (kolom I sampai O). Isi di baris 2, salin sampai baris 10001. Tabel pemetaan kota bernama `Peta` berisi pasangan Jkt → Jakarta dan Jakrta → Jakarta.
+
+| Kolom | Isi | Rumus |
+|---|---|---|
+| I | Nama | `=PROPER(TRIM(SUBSTITUTE(B2, CHAR(160), " ")))` |
+| J | HP (bantu) | `=SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(C2,"-","")," ",""),"+","")` |
+| K | HP | `=IF(LEFT(J2,2)="62", "0"&MID(J2,3,20), J2)` |
+| L | Email | `=LOWER(TRIM(D2))` |
+| M | Kota | `=IFERROR(VLOOKUP(PROPER(TRIM(E2)), Peta, 2, FALSE), PROPER(TRIM(E2)))` |
+| N | Tgl Daftar | `=DATE(RIGHT(F2,4), MID(F2,4,2), LEFT(F2,2))` |
+| O | Belanja | `=IFERROR(VALUE(G2), "")` |
+
+**Tahap 2. VALIDATION** (kolom P sampai S):
+
+| Kolom | Isi | Rumus |
+|---|---|---|
+| P | Duplikat | `=IF(COUNTIF($A$2:A2, A2)>1, "DUPLIKAT", "")` |
+| Q | HP Valid | `=AND(ISNUMBER(--K2), LEN(K2)>=10, LEN(K2)<=13)` |
+| R | Email Valid | `=AND(LEN(L2)-LEN(SUBSTITUTE(L2,"@",""))=1, ISNUMBER(FIND(".", L2, FIND("@", L2))))` |
+| S | Status | lihat rumus di bawah |
+
+```excel
+=IF(P2<>"", "DUPLIKAT",
+ IF(I2="", "NAMA KOSONG",
+ IF(NOT(Q2), "HP TIDAK VALID",
+ IF(NOT(R2), "EMAIL TIDAK VALID",
+ IF(O2="", "BELANJA TIDAK VALID", "VALID")))))
+```
+
+**Tahap 3. VALIDATED DATA** di sheet baru:
+
+```excel
+=FILTER(Data!I2:O10001, Data!S2:S10001="VALID")
+=COUNTIF(Data!S2:S10001, "VALID")/COUNTA(Data!A2:A10001)
+```
+result:
+**Hasil cleaning dan validasi 8 baris contoh:**
+
+| ID | Nama | HP | Email | Kota | Status |
+|---|---|---|---|---|---|
+| CST-0001 | Andi Pratama | 081211112222 | andi.p@gmail.com | Jakarta | VALID |
+| CST-0002 | Siti Aminah | 081333334444 | siti.aminah@yahoo | Jakarta | EMAIL TIDAK VALID |
+| CST-0003 | Budi Hartono | 08575555666 | budi.h@ptmaju.co.id | Bandung | VALID |
+| CST-0001 | Andi Pratama | 081211112222 | andi.p@gmail.com | Jakarta | DUPLIKAT |
+| CST-0004 | | 081977778888 | rina@outlook.com | Surabaya | NAMA KOSONG |
+| CST-0005 | Dewi Lestari | 0812999 | dewi.lestari@gmail.com | Surabaya | HP TIDAK VALID |
+| CST-0006 | Rudi Hartono | 085612345678 | rudi@@gmail.com | Jakarta | EMAIL TIDAK VALID |
+| CST-0007 | Maya Sari | 081322223333 | maya.sari@gmail.com | Bandung | VALID |
+
+**VALIDATED DATA** (hasil `FILTER`, siap impor):
+
+| Nama | HP | Email | Kota | Tgl Daftar | Belanja |
+|---|---|---|---|---|---|
+| Andi Pratama | 081211112222 | andi.p@gmail.com | Jakarta | 03 Jan 2026 | 1,250,000 |
+| Budi Hartono | 08575555666 | budi.h@ptmaju.co.id | Bandung | 28 Feb 2026 | 2,300,000 |
+| Maya Sari | 081322223333 | maya.sari@gmail.com | Bandung | 12 Apr 2026 | 1,430,000 |
+
+Pada 8 baris contoh, tingkat data valid adalah 3 dari 8 (37.5%).
+explain:
+Alurnya dipisah menjadi tiga tahap supaya setiap langkah bisa diperiksa. Tahap cleaning hanya merapikan format tanpa membuang data. Tahap validasi memberi satu status per baris, dengan urutan pemeriksaan yang jelas: duplikat dulu, lalu kelengkapan nama, HP, email, dan nilai belanja. Satu baris hanya mendapat satu status, yaitu masalah pertama yang ditemukan.
+
+Email `siti.aminah@yahoo` lolos pemeriksaan @ tetapi tidak punya titik setelah @, sehingga `FIND` menghasilkan error dan `ISNUMBER` mengubahnya menjadi FALSE. Email `rudi@@gmail.com` gagal karena jumlah @ ada dua.
+
+Kota "Jkt" dan "Jakrta" diperbaiki lewat tabel `Peta`. Kota yang tidak ada di tabel, seperti "Bandung" dan "Surabaya", tetap memakai hasil `PROPER(TRIM())` karena `IFERROR` mengembalikan nilai tersebut saat `VLOOKUP` tidak menemukan pasangannya.
+
+Tahap terakhir memakai `FILTER` (Excel 2021+). Di Excel versi lama, aktifkan AutoFilter pada kolom Status, pilih VALID, lalu salin baris yang tampil ke sheet baru.
+challenge:
+1. Buat daftar ID yang harus dikembalikan ke cabang beserta statusnya.
+2. Hitung jumlah baris per status untuk laporan ke manajer.
+answer:
+```excel
+=FILTER(HSTACK(A2:A10001, S2:S10001), S2:S10001<>"VALID")
+=COUNTIF($S$2:$S$10001, "EMAIL TIDAK VALID")
+```
+Untuk 8 baris contoh, daftar pengembalian berisi CST-0002, CST-0001 (baris duplikat), CST-0004, CST-0005, dan CST-0006. Rekap status: VALID 3, EMAIL TIDAK VALID 2, DUPLIKAT 1, NAMA KOSONG 1, HP TIDAK VALID 1. Untuk tabel rekap otomatis, gunakan pola `HSTACK(UNIQUE(...), COUNTIFS(...))` dari BAB 7.
+@@end
+
+:::challenge LATIHAN BAB 8
+15 soal latihan BAB ini ada di bagian [Practice Questions](#150-practice-questions).
+:::

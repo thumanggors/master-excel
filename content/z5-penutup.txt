@@ -1,0 +1,24 @@
+# Penutup
+
+Anda sudah melewati sepuluh BAB: dari mengenal cell dan referensi, rumus matematika dan logika, pengolahan teks dan tanggal, lookup, dynamic array, pembersihan data, laporan manajemen, sampai dashboard eksekutif.
+
+Rumus di buku ini sengaja dibangun dari data yang mirip pekerjaan sehari-hari. Jadi saat menghadapi file kerja yang sesungguhnya, coba cari kemiripannya. Laporan penjualan cabang Anda mungkin hanya versi lain dari studi kasus BAB 2. Monitoring vendor di kantor mungkin punya pola yang sama dengan Project Status Monitoring di BAB 3.
+
+Beberapa kebiasaan yang membuat file Excel tetap rapi dan bisa dipercaya:
+
+1. Pisahkan data mentah, perhitungan, dan laporan di sheet yang berbeda.
+2. Simpan angka kebijakan (tarif, batas, tanggal acuan) di cell tersendiri, jangan ditulis di dalam rumus.
+3. Bersihkan data sebelum menghitung.
+4. Cocokkan grand total laporan dengan total database setiap kali laporan selesai dibuat.
+5. Tulis rumus yang bisa dibaca orang lain, termasuk Anda sendiri tiga bulan lagi.
+
+Simpan buku ini di tempat yang mudah dijangkau. Saat lupa urutan argument `SUMIFS`, ragu memilih `VLOOKUP` atau `XLOOKUP`, atau perlu contoh cepat menghitung hari kerja, buka Cheat Sheet atau BAB terkait.
+
+@@raw
+<div class="quote" style="margin-top:10mm">"Jangan hanya belajar rumus Excel. Belajarlah memahami masalah, kemudian gunakan Excel untuk menyelesaikannya."<div style="font-size:9pt;font-weight:600;color:#5B6475;margin-top:2mm">Pictor Roito Tumanggor</div></div>
+<div style="margin-top:14mm;text-align:center">
+<div style="font-size:9pt;font-weight:800;letter-spacing:.3em;color:#21A366">MASTER RUMUS EXCEL</div>
+<div style="font-size:8.5pt;color:#5B6475;margin-top:1mm">Panduan Lengkap 300+ Rumus Excel dari Basic hingga Advanced</div>
+<div style="font-size:8.5pt;color:#5B6475">Administrasi • Finance • HR • Project • Data Analysis • Dashboard</div>
+</div>
+@@end

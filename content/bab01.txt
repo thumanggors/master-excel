@@ -1,0 +1,415 @@
+@@chapter 01 | FUNDAMENTAL EXCEL & LOGIKA RUMUS
+desc: Sebelum menghafal ratusan fungsi, pahami dulu cara Excel membaca rumus: dari mana data diambil, bagaimana operator dihitung, dan apa yang terjadi saat rumus disalin ke cell lain. BAB ini menjadi fondasi untuk semua BAB berikutnya.
+goals:
+- Mengenal istilah dasar: workbook, worksheet, cell, range, table, formula bar, name box
+- Membedakan formula, function, dan syntax
+- Memakai referensi relative, absolute, dan mixed dengan tepat
+- Memahami urutan perhitungan operator
+- Menguasai 7 fungsi dasar yang dipakai setiap hari
+@@end
+
+## 1.1 Mengenal Excel
+
+Excel menyimpan data dalam struktur bertingkat. Satu file berisi beberapa sheet, satu sheet berisi jutaan cell, dan setiap cell punya alamat unik. Alamat inilah yang dipakai rumus untuk mengambil data.
+
+@@raw
+<div class="anat">
+  <div class="fbar"><span class="nb">D2</span><span class="fxi">fx</span><span class="fb"><span class="f">=</span>B2*C2</span></div>
+  <div class="anat-tags"><span>① Name Box</span><span>② Formula Bar</span></div>
+</div>
+@@end
+
+@sheet A1
+| Produk | Qty | Harga | Total |
+| Laptop | 5 | 7,500,000 | 37,500,000 |
+| Monitor | 12 | 1,850,000 | 22,200,000 |
+
+| Istilah | Arti | Contoh |
+|---|---|---|
+| Workbook | File Excel secara keseluruhan | `Laporan_Juni.xlsx` |
+| Worksheet | Satu lembar kerja di dalam workbook | Sheet `Data`, `Rekap`, `Dashboard` |
+| Row | Baris, ditandai angka di sisi kiri | Baris 2 |
+| Column | Kolom, ditandai huruf di bagian atas | Kolom D |
+| Cell | Pertemuan satu kolom dan satu baris | `D2` |
+| Range | Kumpulan cell yang berdekatan | `B2:B6`, `A1:D6` |
+| Table | Range yang diubah menjadi Excel Table (Ctrl+T) | `TabelPenjualan` |
+| Formula Bar | Kotak di atas sheet yang menampilkan isi asli cell aktif | `=B2*C2` |
+| Name Box | Kotak di kiri formula bar, menampilkan alamat cell aktif | `D2` |
+
+Pada gambar di atas, cell aktif adalah `D2`. Name Box menunjukkan alamatnya, sedangkan Formula Bar menunjukkan rumus di baliknya. Cell `D2` sendiri hanya menampilkan hasilnya, 37,500,000.
+
+:::tip
+Ketik alamat seperti `D500` atau nama range di Name Box, lalu tekan Enter. Excel langsung melompat ke sana. Cara ini jauh lebih cepat daripada scroll di data ribuan baris.
+:::
+
+### Excel Table
+
+Range biasa bisa diubah menjadi Excel Table dengan menekan **Ctrl+T**. Table punya tiga keuntungan yang terasa di pekerjaan harian: format belang otomatis, rumus otomatis terisi ke baris baru, dan referensi berbasis nama kolom (structured reference).
+
+```excel
+=SUM(TabelPenjualan[Total])
+// sama dengan =SUM(D2:D6), tetapi otomatis ikut bertambah saat baris baru ditambahkan
+```
+
+:::important
+Gunakan Excel Table untuk data yang terus bertambah, seperti transaksi harian atau daftar proyek. Rumus rekap yang merujuk ke kolom Table tidak perlu diubah setiap kali ada data baru.
+:::
+
+## 1.2 Mengenal Formula
+
+| Istilah | Arti | Contoh |
+|---|---|---|
+| Formula | Instruksi perhitungan yang selalu diawali tanda `=` | `=B2*C2` |
+| Function | Rumus siap pakai buatan Excel dengan nama tertentu | `SUM`, `IF`, `XLOOKUP` |
+| Syntax | Aturan penulisan function: nama, tanda kurung, dan urutan argument | `=ROUND(number, num_digits)` |
+| Argument | Nilai yang dimasukkan ke dalam function | `B2:B6`, `2`, `"Lunas"` |
+
+Satu formula bisa berisi beberapa function sekaligus:
+
+```excel
+=ROUND(AVERAGE(B2:B6), 0)
+// AVERAGE menghitung rata-rata, lalu ROUND membulatkannya tanpa desimal
+```
+
+### Operator matematika
+
+| Operator | Arti | Contoh | Hasil |
+|---|---|---|---|
+| `+` | Tambah | `=10+5` | 15 |
+| `-` | Kurang | `=10-5` | 5 |
+| `*` | Kali | `=10*5` | 50 |
+| `/` | Bagi | `=10/5` | 2 |
+| `^` | Pangkat | `=10^2` | 100 |
+| `%` | Persen | `=200*10%` | 20 |
+
+### Operator perbandingan
+
+Operator perbandingan menghasilkan `TRUE` atau `FALSE`. Hasil ini menjadi bahan utama fungsi logika di BAB 3.
+
+| Operator | Arti | Contoh (A2 = 75) | Hasil |
+|---|---|---|---|
+| `=` | Sama dengan | `=A2=75` | TRUE |
+| `<>` | Tidak sama dengan | `=A2<>75` | FALSE |
+| `>` | Lebih besar | `=A2>80` | FALSE |
+| `<` | Lebih kecil | `=A2<80` | TRUE |
+| `>=` | Lebih besar atau sama dengan | `=A2>=75` | TRUE |
+| `<=` | Lebih kecil atau sama dengan | `=A2<=70` | FALSE |
+
+### Operator teks
+
+Tanda `&` menggabungkan teks. Jika A2 berisi `Budi` dan B2 berisi `Santoso`:
+
+```excel
+=A2&" "&B2
+// hasil: Budi Santoso
+```
+
+## 1.3 Referensi Cell
+
+Saat rumus disalin ke cell lain, Excel menyesuaikan alamat di dalamnya. Tanda dolar (`$`) dipakai untuk mengunci bagian alamat yang tidak boleh bergeser.
+
+| Jenis | Penulisan | Saat disalin ke bawah | Saat disalin ke kanan |
+|---|---|---|---|
+| Relative | `A2` | Baris berubah | Kolom berubah |
+| Absolute | `$A$2` | Tetap | Tetap |
+| Mixed (kunci kolom) | `$A2` | Baris berubah | Tetap |
+| Mixed (kunci baris) | `A$2` | Tetap | Kolom berubah |
+
+:::tip
+Klik alamat cell di formula bar, lalu tekan **F4** berulang kali. Excel memutar penulisannya: `A2` → `$A$2` → `A$2` → `$A2` → kembali ke `A2`.
+:::
+
+### Relative reference
+
+Kolom Total diisi dengan rumus di D2, lalu disalin ke bawah.
+
+@sheet A1
+| Produk | Qty | Harga | Total |
+| Laptop | 5 | 7,500,000 | 37,500,000 |
+| Monitor | 12 | 1,850,000 | 22,200,000 |
+| Keyboard | 30 | 250,000 | 7,500,000 |
+
+```excel
+=B2*C2   // di D2
+=B3*C3   // di D3, otomatis bergeser saat disalin
+=B4*C4   // di D4
+```
+
+### Absolute reference
+
+Komisi sales dihitung dari satu tarif di cell `G1`. Tarif ini harus dikunci supaya tidak ikut bergeser.
+
+@sheet A1
+| Sales | Penjualan | Komisi | | | Tarif Komisi | 2.5% |
+| Andi | 120,000,000 | 3,000,000 |
+| Bella | 86,000,000 | 2,150,000 |
+| Candra | 142,000,000 | 3,550,000 |
+
+```excel
+=B2*$G$1   // di C2, lalu salin ke C3:C4
+```
+
+Tanpa tanda dolar, rumus di C3 akan menjadi `=B3*G2`. Cell `G2` kosong, jadi komisi Bella dihitung 0.
+
+### Mixed reference
+
+Mixed reference berguna untuk tabel dua arah. Contoh berikut menghitung harga setelah diskon untuk beberapa produk (baris) dan beberapa tingkat diskon (kolom).
+
+@sheet A1
+| Harga \ Diskon | 5% | 10% | 15% |
+| 1,000,000 | 950,000 | 900,000 | 850,000 |
+| 2,500,000 | 2,375,000 | 2,250,000 | 2,125,000 |
+| 4,000,000 | 3,800,000 | 3,600,000 | 3,400,000 |
+
+```excel
+=$A2*(1-B$1)   // di B2, lalu salin ke seluruh B2:D4
+```
+
+`$A2` mengunci kolom A (harga selalu diambil dari kolom A), sedangkan `B$1` mengunci baris 1 (diskon selalu diambil dari baris judul). Satu rumus cukup untuk mengisi sembilan cell.
+
+## 1.4 Operator Excel dan Urutan Perhitungan
+
+Excel tidak menghitung dari kiri ke kanan begitu saja. Ada urutan prioritas, mirip aturan matematika di sekolah.
+
+| Urutan | Operator | Keterangan |
+|---|---|---|
+| 1 | `:` `,` spasi | Operator referensi (range, gabungan, irisan) |
+| 2 | `-` | Tanda negatif, misalnya `-5` |
+| 3 | `%` | Persen |
+| 4 | `^` | Pangkat |
+| 5 | `*` `/` | Kali dan bagi |
+| 6 | `+` `-` | Tambah dan kurang |
+| 7 | `&` | Gabung teks |
+| 8 | `=` `<>` `<` `>` `<=` `>=` | Perbandingan |
+
+| Formula | Hasil | Alasan |
+|---|---|---|
+| `=2+3*4` | 14 | Perkalian dihitung lebih dulu |
+| `=(2+3)*4` | 20 | Kurung dihitung paling awal |
+| `=100-20/4` | 95 | 20/4 = 5, lalu 100-5 |
+| `=-2^2` | 4 | Tanda negatif diproses sebelum pangkat |
+| `=0-2^2` | -4 | Di sini minus adalah pengurangan, jadi pangkat dihitung dulu |
+
+:::warn
+Hasil `=-2^2` di Excel adalah 4, berbeda dengan kalkulator dan aturan matematika umum yang menghasilkan -4. Jika maksud Anda negatif dari hasil pangkat, tulis `=-(2^2)`.
+:::
+
+:::tip
+Kalau ragu dengan urutan perhitungan, tambahkan tanda kurung. Kurung tambahan tidak memperlambat rumus dan membuatnya lebih mudah dibaca orang lain.
+:::
+
+## 1.5 Formula Dasar
+
+Tujuh fungsi berikut adalah fungsi yang paling sering dipakai di kantor. Hampir semua laporan sederhana bisa dibuat hanya dengan fungsi-fungsi ini.
+
+@@fx SUM
+fungsi: Menjumlahkan angka dalam satu atau beberapa range. Teks dan cell kosong diabaikan.
+syntax: =SUM(number1, [number2], ...)
+args:
+number1 | Angka, cell, atau range pertama yang dijumlahkan (wajib)
+[number2] | Angka, cell, atau range tambahan (opsional, sampai 255 argument)
+data:
+| Kategori | Biaya |
+| Listrik | 2,450,000 |
+| Internet | 1,200,000 |
+| Air | 380,000 |
+| ATK | 725,000 |
+| Konsumsi | 1,150,000 |
+formula: =SUM(B2:B6)
+hasil: 5,905,000
+jelas: Excel menjumlahkan semua angka di B2 sampai B6: 2,450,000 + 1,200,000 + 380,000 + 725,000 + 1,150,000 = 5,905,000.
+tip: Pilih cell tepat di bawah data, lalu tekan **Alt + =**. Excel menulis `=SUM(...)` beserta range-nya secara otomatis.
+salah: Angka yang tersimpan sebagai teks (biasanya rata kiri dan ada segitiga hijau di pojok cell) tidak ikut dijumlahkan. Total terlihat lebih kecil tanpa pesan error. Cara memperbaikinya dibahas di BAB 8.
+real: Rekap biaya operasional bulanan, total gaji per departemen, total nilai invoice yang belum dibayar.
+@@end
+
+@@fx PRODUCT
+fungsi: Mengalikan semua angka dalam argument. Berguna saat faktor pengalinya lebih dari dua.
+syntax: =PRODUCT(number1, [number2], ...)
+args:
+number1 | Angka atau range pertama yang dikalikan
+[number2] | Angka atau range tambahan
+data:
+| Item | Qty | Harga Satuan | Faktor Diskon |
+| Kertas A4 (box) | 12 | 285,000 | 95% |
+formula: =PRODUCT(B2:D2)
+hasil: 3,249,000
+jelas: Excel mengalikan 12 × 285,000 × 95%. Hasil 12 × 285,000 adalah 3,420,000, lalu dikali 0.95 menjadi 3,249,000. Rumus ini sama dengan `=B2*C2*D2`.
+tip: `PRODUCT` mengabaikan cell kosong di dalam range, sedangkan operator `*` menganggap cell kosong bernilai 0. Jika faktor diskon belum diisi, `=B2*C2*D2` menghasilkan 0, sedangkan `=PRODUCT(B2:D2)` tetap menghasilkan 3,420,000.
+salah: Menulis diskon sebagai 5% lalu mengalikannya langsung. Hasilnya adalah nilai diskonnya, bukan harga setelah diskon. Gunakan faktor `1-5%` atau 95%.
+real: Menghitung nilai kontrak (volume × harga × faktor), biaya sewa (unit × hari × tarif), atau nilai stok (qty × harga × kurs).
+@@end
+
+@@fx AVERAGE
+fungsi: Menghitung rata-rata aritmatika. Excel menjumlahkan angka lalu membaginya dengan banyaknya angka.
+syntax: =AVERAGE(number1, [number2], ...)
+args:
+number1 | Angka atau range pertama
+[number2] | Angka atau range tambahan
+data:
+| Karyawan | Nilai Training |
+| Andi | 82 |
+| Bella | 90 |
+| Citra | 76 |
+| Dimas | 88 |
+| Eka | 79 |
+formula: =AVERAGE(B2:B6)
+hasil: 83
+jelas: Total nilai adalah 82 + 90 + 76 + 88 + 79 = 415. Ada 5 angka, jadi 415 ÷ 5 = 83.
+tip: Gabungkan dengan `ROUND` supaya tampilan konsisten di laporan: `=ROUND(AVERAGE(B2:B6), 1)`.
+salah: Cell kosong diabaikan, tetapi angka 0 ikut dihitung. Jika peserta yang belum ujian diisi 0, rata-rata turun. Biarkan kosong jika memang belum ada nilai.
+real: Rata-rata nilai KPI karyawan, rata-rata lama pengerjaan tiket, rata-rata penjualan harian.
+@@end
+
+@@fx MIN
+fungsi: Mengambil angka terkecil dari sekumpulan nilai.
+syntax: =MIN(number1, [number2], ...)
+args:
+number1 | Angka atau range pertama
+[number2] | Angka atau range tambahan
+data:
+| Vendor | Harga Penawaran |
+| PT Sinar Jaya | 14,750,000 |
+| CV Mitra Abadi | 13,980,000 |
+| PT Karya Teknik | 15,200,000 |
+| CV Prima Solusi | 14,100,000 |
+formula: =MIN(B2:B5)
+hasil: 13,980,000
+jelas: Excel membandingkan keempat harga dan mengembalikan yang paling kecil, yaitu penawaran CV Mitra Abadi. Untuk menampilkan nama vendornya, gunakan kombinasi lookup di BAB 6.
+tip: `MIN` juga berguna sebagai batas atas. `=MIN(B2, 5000000)` berarti "ambil B2, tetapi maksimal 5,000,000", cocok untuk plafon reimburse.
+salah: Jika range berisi 0 sebagai tanda "belum mengisi penawaran", `MIN` akan menghasilkan 0. Kosongkan cell tersebut, atau gunakan `MINIFS` dengan kriteria `">0"`.
+real: Mencari harga penawaran terendah, tanggal mulai paling awal, atau stok paling sedikit.
+@@end
+
+@@fx MAX
+fungsi: Mengambil angka terbesar dari sekumpulan nilai.
+syntax: =MAX(number1, [number2], ...)
+args:
+number1 | Angka atau range pertama
+[number2] | Angka atau range tambahan
+data:
+| No Tiket | Waktu Respon (menit) |
+| T-101 | 35 |
+| T-102 | 12 |
+| T-103 | 48 |
+| T-104 | 27 |
+| T-105 | 19 |
+| T-106 | 55 |
+formula: =MAX(B2:B7)
+hasil: 55
+jelas: Dari enam tiket, waktu respon paling lama adalah 55 menit pada tiket T-106.
+tip: `MAX` bisa dipakai sebagai batas bawah. `=MAX(B2-C2, 0)` mencegah hasil negatif, misalnya sisa stok atau sisa kuota yang tidak boleh kurang dari nol.
+salah: `MAX` pada kolom tanggal mengembalikan tanggal paling akhir dalam bentuk angka seri (misalnya 46188). Ubah format cell menjadi Date agar tampil sebagai tanggal.
+real: Mencari waktu respon terlama untuk evaluasi SLA, nilai transaksi terbesar, atau tanggal update terakhir.
+@@end
+
+@@fx COUNT
+fungsi: Menghitung jumlah cell yang berisi angka. Tanggal juga dihitung karena Excel menyimpan tanggal sebagai angka.
+syntax: =COUNT(value1, [value2], ...)
+args:
+value1 | Cell atau range yang dihitung
+[value2] | Cell atau range tambahan
+data:
+| Karyawan | Jam Lembur |
+| Rudi | 3 |
+| Sari | |
+| Tono | 2 |
+| Umi | izin |
+| Vina | 4 |
+| Wawan | 0 |
+formula: =COUNT(B2:B7)
+hasil: 4
+jelas: Cell yang berisi angka adalah B2 (3), B4 (2), B6 (4), dan B7 (0). Cell kosong B3 dan teks "izin" di B5 tidak dihitung.
+tip: Bandingkan `COUNT` dengan jumlah baris data untuk mendeteksi angka yang tersimpan sebagai teks. Jika hasilnya lebih kecil dari yang diharapkan, ada data yang formatnya salah.
+salah: Menganggap `COUNT` menghitung semua isian. Untuk menghitung cell berisi teks atau isian apa pun, gunakan `COUNTA`.
+real: Menghitung berapa karyawan yang sudah mengisi jam lembur, berapa transaksi yang sudah punya nilai, atau berapa proyek yang sudah punya tanggal selesai.
+@@end
+
+@@fx COUNTA
+fungsi: Menghitung cell yang tidak kosong, apa pun isinya: angka, teks, tanggal, nilai logika, bahkan error.
+syntax: =COUNTA(value1, [value2], ...)
+args:
+value1 | Cell atau range yang dihitung
+[value2] | Cell atau range tambahan
+data:
+| Karyawan | Jam Lembur |
+| Rudi | 3 |
+| Sari | |
+| Tono | 2 |
+| Umi | izin |
+| Vina | 4 |
+| Wawan | 0 |
+formula:
+=COUNTA(A2:A7)
+=COUNTA(B2:B7)
+hasil:
+6 (jumlah karyawan) dan 5 (jumlah isian jam lembur)
+jelas: Kolom A terisi penuh, jadi hasilnya 6. Di kolom B hanya B3 yang kosong. Angka dan teks "izin" sama-sama dihitung, sehingga hasilnya 5. Selisih `COUNTA(A2:A7)-COUNTA(B2:B7)` = 1 menunjukkan satu karyawan belum mengisi data.
+tip: Untuk menghitung cell kosong, gunakan `=COUNTBLANK(B2:B7)`. Hasilnya 1.
+salah: Cell yang terlihat kosong tetapi berisi spasi, atau berisi rumus yang menghasilkan teks kosong `""`, tetap dihitung oleh `COUNTA`. Ini sering membuat jumlah data terlihat lebih banyak.
+real: Menghitung jumlah peserta, jumlah dokumen yang sudah diunggah, atau jumlah baris data di sebuah database.
+@@end
+
+@@case Laporan Penjualan Sederhana
+problem: Admin penjualan diminta membuat laporan singkat penjualan minggu ini untuk supervisor: total omzet, total unit terjual, rata-rata penjualan per produk, produk dengan omzet tertinggi dan terendah, serta jumlah produk yang terjual. Selama ini angka dihitung dengan kalkulator, dan hasilnya sering berbeda saat dicek ulang.
+data:
+| Produk | Qty | Harga | Total |
+| Laptop | 5 | 7,500,000 | |
+| Monitor | 12 | 1,850,000 | |
+| Keyboard | 30 | 250,000 | |
+| Mouse | 45 | 120,000 | |
+| Printer | 8 | 2,300,000 | |
+formula:
+Isi kolom Total di D2, lalu salin ke D6:
+
+```excel
+=B2*C2
+```
+
+Buat ringkasan di area kosong, misalnya kolom F dan G:
+
+| Ringkasan (F) | Formula (G) |
+|---|---|
+| Total Omzet | `=SUM(D2:D6)` |
+| Total Unit | `=SUM(B2:B6)` |
+| Rata-rata Omzet per Produk | `=AVERAGE(D2:D6)` |
+| Omzet Tertinggi | `=MAX(D2:D6)` |
+| Omzet Terendah | `=MIN(D2:D6)` |
+| Jumlah Produk Terjual | `=COUNT(B2:B6)` |
+| Jumlah Baris Produk | `=COUNTA(A2:A6)` |
+result:
+@sheet A1
+| Produk | Qty | Harga | Total |
+| Laptop | 5 | 7,500,000 | 37,500,000 |
+| Monitor | 12 | 1,850,000 | 22,200,000 |
+| Keyboard | 30 | 250,000 | 7,500,000 |
+| Mouse | 45 | 120,000 | 5,400,000 |
+| Printer | 8 | 2,300,000 | 18,400,000 |
+
+| Ringkasan | Hasil |
+|---|---|
+| Total Omzet | 91,000,000 |
+| Total Unit | 100 |
+| Rata-rata Omzet per Produk | 18,200,000 |
+| Omzet Tertinggi | 37,500,000 |
+| Omzet Terendah | 5,400,000 |
+| Jumlah Produk Terjual | 5 |
+| Jumlah Baris Produk | 5 |
+explain:
+Kolom Total memakai relative reference, jadi satu rumus di D2 cukup disalin ke bawah. Semua angka ringkasan diambil dari kolom D dan B, sehingga jika ada revisi qty atau harga, seluruh laporan ikut berubah tanpa dihitung ulang.
+
+`COUNT(B2:B6)` dan `COUNTA(A2:A6)` sama-sama bernilai 5. Kalau suatu saat hasilnya berbeda, berarti ada produk yang qty-nya belum diisi atau tersimpan sebagai teks. Perbedaan ini bisa dipakai sebagai alarm sederhana.
+challenge:
+Tambahkan kolom E berjudul **PPN** dengan tarif 11% yang disimpan di cell `J1`. Rumus harus bisa disalin dari E2 ke E6 tanpa diubah. Lalu hitung total PPN dan persentase kontribusi Laptop terhadap total omzet.
+answer:
+```excel
+=D2*$J$1          // di E2, salin ke E6. J1 berisi 11%
+=SUM(E2:E6)       // total PPN
+=D2/SUM($D$2:$D$6) // kontribusi Laptop, format sebagai persen
+```
+PPN Laptop = 37,500,000 × 11% = 4,125,000. Total PPN = 91,000,000 × 11% = 10,010,000. Kontribusi Laptop = 37,500,000 ÷ 91,000,000 = 41.2%.
+@@end
+
+:::challenge LATIHAN BAB 1
+15 soal latihan BAB ini (5 basic, 5 intermediate, 5 advanced) ada di bagian [Practice Questions](#150-practice-questions), lengkap dengan kunci jawaban di [Answer Key](#answer-key).
+:::

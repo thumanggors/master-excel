@@ -1,0 +1,289 @@
+# 150 Practice Questions
+
+Setiap BAB punya 15 soal dalam tiga level. Soal memakai data studi kasus atau contoh di BAB yang bersangkutan, jadi buka kembali tabelnya dan ketik ulang di workbook latihan dengan posisi cell yang sama. Kunci jawaban ada di bagian [Answer Key](#answer-key).
+
+| Level | Isi | Target |
+|---|---|---|
+| 🟢 LEVEL 1 · BASIC | Satu fungsi, satu langkah | Hafal syntax |
+| 🟡 LEVEL 2 · INTERMEDIATE | Kriteria, referensi, atau dua fungsi | Paham cara kerja |
+| 🔴 LEVEL 3 · ADVANCED | Kombinasi fungsi untuk masalah nyata | Bisa merancang rumus sendiri |
+
+## BAB 1 · Fundamental Excel & Logika Rumus
+
+Data: tabel Studi Kasus Laporan Penjualan Sederhana (A1:D6, kolom D sudah terisi Total).
+
+### 🟢 LEVEL 1 · BASIC
+
+1. Hitung total qty seluruh produk.
+2. Hitung rata-rata harga satuan.
+3. Tampilkan harga satuan tertinggi.
+4. Tampilkan qty terkecil.
+5. Hitung jumlah produk berdasarkan kolom nama produk.
+
+### 🟡 LEVEL 2 · INTERMEDIATE
+
+6. Hitung total omzet tanpa memakai kolom D.
+7. Diskon 10% disimpan di G1. Tulis rumus harga setelah diskon di E2 yang bisa disalin sampai E6.
+8. Buat teks "Laptop - 5 unit" dari kolom A dan B.
+9. Berapa hasil `=10+5*2^2`? Jelaskan urutannya.
+10. Hitung selisih omzet tertinggi dan terendah.
+
+### 🔴 LEVEL 3 · ADVANCED
+
+11. Hitung kontribusi setiap produk terhadap total omzet dengan satu rumus di E2 yang bisa disalin ke bawah. Berapa kontribusi Monitor?
+12. Buat tabel perkalian 5×5: angka 1-5 di B1:F1 dan A2:A6. Tulis satu rumus di B2 yang bisa disalin ke seluruh B2:F6.
+13. Mengapa `=-3^2` menghasilkan 9? Tulis rumus yang menghasilkan -9.
+14. Hitung harga rata-rata per unit tertimbang (total omzet dibagi total qty).
+15. Kolom E (PPN) baru terisi di E2 dan E3. Hitung berapa cell PPN yang belum diisi di E2:E6.
+
+## BAB 2 · Rumus Matematika & Statistik
+
+Data: tabel Studi Kasus Analisis Penjualan Bulanan (A1:C7: Sales, Target, Actual).
+
+### 🟢 LEVEL 1 · BASIC
+
+16. Hitung total target.
+17. Hitung rata-rata target.
+18. Hitung median actual.
+19. Tampilkan actual terbesar kedua.
+20. Tampilkan target terkecil.
+
+### 🟡 LEVEL 2 · INTERMEDIATE
+
+21. Hitung total actual untuk sales yang targetnya tepat 50,000,000.
+22. Hitung rata-rata actual untuk sales yang targetnya minimal 40,000,000.
+23. Hitung selisih absolut actual dan target Dewi.
+24. Bulatkan actual Candra ke bawah dalam satuan juta.
+25. Tentukan peringkat Eko berdasarkan actual (terbesar = 1).
+
+### 🔴 LEVEL 3 · ADVANCED
+
+26. Hitung total kelebihan actual di atas target, hanya untuk sales yang melebihi target, dalam satu rumus.
+27. Bonus 2% dari actual diberikan kepada sales dengan achievement minimal 100%. Hitung total bonus dalam satu rumus.
+28. Bulatkan rata-rata actual ke kelipatan 500,000 terdekat.
+29. Proyeksikan total actual tim jika tumbuh 5% per bulan selama 3 bulan.
+30. Tampilkan achievement Bella dibulatkan ke satu desimal persen.
+
+## BAB 3 · Rumus Logika
+
+Data: tabel Studi Kasus Project Status Monitoring (A1:G8, tanggal acuan di I1).
+
+### 🟢 LEVEL 1 · BASIC
+
+31. Tampilkan "SELESAI" jika progress 100%, selain itu "BELUM".
+32. Tampilkan TRUE jika BAST belum ada.
+33. Tampilkan "LEWAT" jika tanggal acuan sudah melewati Plan Finish, selain itu "-".
+34. Tampilkan TRUE jika progress di atas 0% dan di bawah 100%.
+35. Ubah kode "OP", "DL", "CP" di cell K2 menjadi "ON PROGRESS", "DELAY", "COMPLETED", dengan default "-".
+
+### 🟡 LEVEL 2 · INTERMEDIATE
+
+36. Buat kategori progress dengan `IFS`: minimal 80% "Tinggi", minimal 40% "Sedang", selain itu "Rendah".
+37. Buat kategori yang sama dengan Nested IF.
+38. Tampilkan "PERHATIAN" jika status DELAY atau progress di bawah 30%.
+39. Hitung jumlah proyek DELAY.
+40. Hitung rasio progress terhadap Plan % tanpa error untuk proyek yang Plan %-nya 0.
+
+### 🔴 LEVEL 3 · ADVANCED
+
+41. Tampilkan TRUE jika tepat satu dari dua kondisi terpenuhi: progress 100% atau BAST ada.
+42. Buat singkatan status dengan `SWITCH`: ON TRACK → OT, ON PROGRESS → OP, DELAY → DL, lainnya "-".
+43. K1 berisi kode "PRJ-04". Ambil status proyek tersebut dari tabel (kolom A berisi kode dan nama). Tampilkan "Tidak ada" jika kodenya tidak ditemukan.
+44. Hitung jumlah proyek ON TRACK atau ON PROGRESS dalam satu rumus.
+45. Buat kolom Health: DELAY = MERAH, ON PROGRESS = KUNING, NOT STARTED = ABU, status lain = HIJAU.
+
+## BAB 4 · Rumus Text & Data Processing
+
+Data: contoh di BAB 4 dan hasil Studi Kasus Membersihkan Database Customer. Teks yang diuji ditulis di A2.
+
+### 🟢 LEVEL 1 · BASIC
+
+46. Ambil kode region dari "JKT-2026-0147".
+47. Hitung jumlah karakter "Budi Santoso".
+48. Ubah "siti nurhaliza" menjadi "Siti Nurhaliza".
+49. Ubah "SITI.N@YAHOO.CO.ID" menjadi huruf kecil.
+50. Buang spasi berlebih dari "··andi··pratama" (· = spasi).
+
+### 🟡 LEVEL 2 · INTERMEDIATE
+
+51. Ambil domain dari "budi.santoso@gmail.com".
+52. Ambil nama depan dari "Siti Nurhaliza".
+53. A2 berisi angka 45. Buat kode "CST-0045".
+54. Hapus semua tanda strip dari "0819-7777-8888".
+55. A2 berisi "Bandung" dan B2 berisi 40115. Buat teks "Bandung, 40115".
+
+### 🔴 LEVEL 3 · ADVANCED
+
+56. Samarkan email "budi.santoso@gmail.com" menjadi "bud***@gmail.com".
+57. Hitung jumlah kata dalam "Jl. Merdeka No. 5".
+58. Ambil kata terakhir (nama belakang) dari "Budi Santoso", dengan rumus yang juga bekerja untuk nama tiga kata.
+59. Periksa apakah kode "cst-12" sudah ditulis kapital semua.
+60. Ubah teks "Rp1.250.000" menjadi angka 1250000.
+
+## BAB 5 · Rumus Tanggal & Waktu
+
+Data: tabel Studi Kasus Project Aging & SLA Monitoring (tanggal acuan 15 Jun 2026).
+
+### 🟢 LEVEL 1 · BASIC
+
+61. Tampilkan tanggal hari ini.
+62. Ambil tahun dari Start P-01.
+63. Tampilkan nama bulan Start P-01 dalam bahasa Indonesia.
+64. Hitung selisih hari Actual dan Start P-02.
+65. Susun tanggal 31 Desember 2026 dari angka.
+
+### 🟡 LEVEL 2 · INTERMEDIATE
+
+66. Tampilkan tanggal akhir bulan dari Start P-04.
+67. Tampilkan tanggal 3 bulan setelah Start P-01.
+68. Tampilkan nama hari Target P-03 dalam bahasa Indonesia.
+69. Hitung jumlah hari kerja (Senin-Jumat) dari 1 sampai 15 Juni 2026.
+70. Tampilkan nomor minggu dari 15 Juni 2026.
+
+### 🔴 LEVEL 3 · ADVANCED
+
+71. Tampilkan masa kerja karyawan yang masuk 10 Aug 2019 per 15 Jun 2026 dalam format "6 thn 10 bln".
+72. Pekerjaan 15 hari kerja dimulai 15 Jun 2026, dengan libur 17 dan 22 Jun 2026 di H2:H3. Kapan selesainya?
+73. Hitung jumlah hari Sabtu dan Minggu di bulan Juni 2026 dengan rumus.
+74. Hitung umur (tahun penuh) orang yang lahir 20 Aug 1990 per 15 Jun 2026.
+75. A2 berisi jam masuk 08:15 dan B2 jam pulang 17:45. Hitung jam kerja desimal setelah dikurangi istirahat 1 jam.
+
+## BAB 6 · Lookup & Pencarian Data
+
+Data: tabel master material (A1:G7) di BAB 6.
+
+### 🟢 LEVEL 1 · BASIC
+
+76. Ambil nama material MTR-005 dengan `VLOOKUP`.
+77. Ambil harga MTR-002.
+78. Tentukan posisi MTR-006 di kolom kode.
+79. Ambil isi baris ke-3, kolom ke-3 dari range A2:G7.
+80. Tampilkan "Malam" dari daftar "Pagi", "Siang", "Malam" dengan `CHOOSE`.
+
+### 🟡 LEVEL 2 · INTERMEDIATE
+
+81. Ambil kode material dari nama "ODP 16 Port".
+82. Ambil stok MTR-010 dengan `XLOOKUP`, tampilkan "Tidak ada" jika tidak ditemukan.
+83. Ambil estimasi hari untuk Zona 3 dari tabel `HLOOKUP`.
+84. Dengan tabel komisi di contoh `LOOKUP`, berapa komisi untuk penjualan 25,000,000?
+85. Hitung nilai stok MTR-004 (harga × stok) dengan lookup.
+
+### 🔴 LEVEL 3 · ADVANCED
+
+86. Ambil nama material terakhir yang brand-nya NexCom.
+87. Ambil stok MTR-001 dengan `INDEX` dan dua `MATCH`.
+88. Tampilkan nama material dengan harga tertinggi.
+89. Cari kode material yang namanya mengandung kata "Drop".
+90. Ambil Brand dan Harga MTR-003 sekaligus dalam satu rumus.
+
+## BAB 7 · Filter, Sort & Dynamic Array
+
+Data: data proyek (A1:F9) di BAB 7.
+
+### 🟢 LEVEL 1 · BASIC
+
+91. Tampilkan semua proyek berstatus COMPLETED.
+92. Urutkan seluruh data berdasarkan nama proyek A-Z. Proyek apa yang muncul pertama?
+93. Tampilkan daftar status unik.
+94. Buat angka 1 sampai 10 ke bawah.
+95. Hitung jumlah provider unik.
+
+### 🟡 LEVEL 2 · INTERMEDIATE
+
+96. Tampilkan proyek Nusanet yang nilainya di atas 400.
+97. Tampilkan nama proyek diurutkan dari nilai terkecil.
+98. Tampilkan 2 proyek dengan nilai terkecil (semua kolom).
+99. Tampilkan proyek di Banten atau DKI Jakarta.
+100. Hitung total nilai proyek ON PROGRESS dengan `FILTER`.
+
+### 🔴 LEVEL 3 · ADVANCED
+
+101. Buat tabel rekap total nilai per provinsi (urut abjad) dalam satu rumus.
+102. Tampilkan nama semua proyek DELAY dalam satu cell, dipisah koma.
+103. Tampilkan nama proyek yang nilainya di atas rata-rata.
+104. Tampilkan ID dan Project milik NetraCom lengkap dengan baris judul, dalam satu rumus.
+105. Buat daftar 12 tanggal akhir bulan sepanjang tahun 2026 dalam satu rumus.
+
+## BAB 8 · Data Cleaning & Validation
+
+Data: RAW DATA dan hasil tahap cleaning/validasi di Studi Kasus BAB 8 (baris 2 sampai 9).
+
+### 🟢 LEVEL 1 · BASIC
+
+106. Hitung jumlah nama yang kosong di B2:B9.
+107. Periksa apakah G2 (`'1250000`) berisi angka.
+108. Periksa apakah G2 berisi teks.
+109. Periksa apakah B6 kosong.
+110. Bersihkan spasi di "surabaya·".
+
+### 🟡 LEVEL 2 · INTERMEDIATE
+
+111. Tandai ID yang merupakan kemunculan kedua atau seterusnya.
+112. Ubah teks tanggal "03/01/2026" (F2) menjadi tanggal asli.
+113. Hitung total belanja semua baris yang nilainya bisa dikonversi menjadi angka, dalam satu rumus.
+114. Hitung jumlah email tidak valid dari kolom R.
+115. Periksa apakah nomor HP "0812999" memenuhi aturan 10-13 digit angka.
+
+### 🔴 LEVEL 3 · ADVANCED
+
+116. Uji rumus validasi email pada "siti.aminah@yahoo". Apa hasilnya dan mengapa?
+117. Hitung persentase baris VALID dari seluruh baris.
+118. Tulis rumus Data Validation Custom agar tanggal daftar tidak boleh melewati hari ini.
+119. Hitung jumlah ID unik di A2:A9 dengan rumus yang bekerja di semua versi Excel.
+120. Hitung jumlah nama di B2:B9 yang mengandung spasi berlebih.
+
+## BAB 9 · Database & Reporting
+
+Data: database proyek FTTH (A1:H11) di BAB 9.
+
+### 🟢 LEVEL 1 · BASIC
+
+121. Hitung jumlah proyek COMPLETED.
+122. Hitung total target NetraCom.
+123. Hitung jumlah proyek di Banten.
+124. Hitung rata-rata actual seluruh proyek.
+125. Hitung jumlah proyek yang Kab/Kota-nya mengandung "Tangerang".
+
+### 🟡 LEVEL 2 · INTERMEDIATE
+
+126. Hitung total actual Selulink yang COMPLETED.
+127. Hitung jumlah proyek Bella yang belum COMPLETED.
+128. Hitung rata-rata target proyek di Jawa Barat.
+129. Hitung achievement Nusanet.
+130. Tampilkan actual terbesar di Banten tanpa D-function.
+
+### 🔴 LEVEL 3 · ADVANCED
+
+131. Dengan `DSUM`, hitung total target Selulink di Jawa Barat.
+132. Dengan `DCOUNTA`, hitung proyek yang berstatus DELAY atau dipegang Candra.
+133. Dengan `DGET`, ambil Kab/Kota proyek yang actual-nya 240.
+134. Hitung sisa target (target - actual) seluruh proyek ON PROGRESS.
+135. Hitung jumlah proyek dengan achievement di bawah 50%.
+
+## BAB 10 · Advanced Formula & Formula Combination
+
+Data: contoh di BAB 10 dan database dashboard (sheet Data, A1:K9, tanggal acuan di N1).
+
+### 🟢 LEVEL 1 · BASIC
+
+136. Dengan data contoh `IF + AND`, apakah Andi mendapat bonus?
+137. Dengan data transaksi di contoh `SUMIFS + DATE`, hitung total transaksi bulan Mei 2026.
+138. Dengan data tiket di contoh `COUNTIFS + DATE`, hitung seluruh tiket Open.
+139. Hitung achievement dashboard dengan `LET` (variabel total target dan total actual).
+140. Tampilkan daftar region unik yang terurut dari database dashboard.
+
+### 🟡 LEVEL 2 · INTERMEDIATE
+
+141. Hitung total transaksi region East di bulan Juni 2026.
+142. Hitung jumlah proyek COMPLETED yang selesai melewati Plan Finish.
+143. Tampilkan proyek ON PROGRESS diurutkan dari target terbesar (kolom Project dan Target saja).
+144. Dengan data contoh `IFERROR + XLOOKUP`, berapa nilai order MTR-002 sebanyak 50?
+145. Hitung aging PRJ-A03.
+
+### 🔴 LEVEL 3 · ADVANCED
+
+146. Buat fungsi `SISA` dengan `LAMBDA` yang menghitung sisa target (tidak boleh negatif). Berapa hasilnya untuk PRJ-A03?
+147. Buat tabel achievement per PIC dalam satu rumus.
+148. Hitung rata-rata aging khusus proyek yang belum selesai.
+149. Hitung jumlah proyek yang Actual Start-nya lebih dari 1 hari setelah Plan Start.
+150. Buat tabel total transaksi Juni 2026 per region dalam satu rumus.

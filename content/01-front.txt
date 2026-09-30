@@ -1,0 +1,133 @@
+@@raw
+<section class="copyright center-page" id="copyright">
+<div style="font-size:22pt;font-weight:900;color:#0B2B1C;letter-spacing:-.01em">MASTER RUMUS EXCEL</div>
+<div style="font-size:11pt;color:#5B6475;margin:1mm 0 8mm">Panduan Lengkap 300+ Rumus Excel dari Basic hingga Advanced</div>
+<p class="small"><strong>Penulis:</strong> Pictor Roito Tumanggor<br><strong>Edisi:</strong> Edisi Pertama, 2026<br><strong>Format:</strong> eBook (PDF)</p>
+<p class="small"><strong>Hak Cipta © 2026 Pictor Roito Tumanggor.</strong> Seluruh hak cipta dilindungi undang-undang. Dilarang memperbanyak, menyalin, mendistribusikan, atau memperjualbelikan sebagian maupun seluruh isi buku ini dalam bentuk apa pun, baik cetak maupun elektronik, tanpa izin tertulis dari penulis. Pengutipan singkat untuk keperluan ulasan, pendidikan, atau pelatihan internal diperbolehkan dengan menyebutkan sumber.</p>
+<p class="small">Microsoft, Excel, dan Microsoft 365 adalah merek dagang milik Microsoft Corporation. Buku ini adalah karya independen dan tidak berafiliasi dengan, disponsori, atau disetujui oleh Microsoft Corporation.</p>
+<p class="small">Seluruh nama proyek, perusahaan, customer, material, dan angka dalam contoh buku ini adalah data rekaan untuk keperluan latihan. Kemiripan dengan data nyata tidak disengaja.</p>
+</section>
+@@end
+
+# Disclaimer
+
+Buku ini disusun sebagai bahan belajar dan referensi kerja. Penulis sudah berusaha memastikan setiap rumus, contoh data, dan hasil perhitungan benar. Meski begitu, beberapa hal perlu Anda perhatikan sebelum memakai rumus di buku ini untuk pekerjaan nyata.
+
+- **Versi Excel berbeda-beda.** Sebagian fungsi hanya ada di Excel versi modern (Excel 2019, 2021, 2024, atau Microsoft 365). Setiap fungsi seperti ini diberi label versi di formula card-nya.
+- **Pengaturan regional memengaruhi penulisan rumus.** Contoh di buku ini memakai pemisah argumen koma (`,`). Excel dengan pengaturan regional Indonesia memakai titik koma (`;`). Lihat penjelasannya di bagian Cara Menggunakan Buku.
+- **Hasil perhitungan tanggal** seperti `TODAY()` dan `NOW()` akan berbeda sesuai tanggal Anda membuka file. Contoh yang memakai fungsi ini menyebutkan tanggal acuan yang dipakai.
+- **Keputusan bisnis tetap tanggung jawab pengguna.** Rumus membantu menghitung dan menyajikan data, tetapi tidak menggantikan pemeriksaan dan penilaian profesional, terutama untuk laporan keuangan, pajak, penggajian, dan kontrak.
+
+Penulis dan pihak mana pun yang terlibat dalam penyusunan buku ini tidak bertanggung jawab atas kerugian yang timbul akibat penggunaan informasi di dalamnya. Selalu uji rumus pada salinan data sebelum dipakai di file kerja utama.
+
+# Kata Pengantar
+
+Hampir semua pekerjaan kantor menyentuh Excel. Rekap penjualan, absensi karyawan, monitoring proyek, daftar material gudang, sampai laporan untuk manajemen biasanya berawal dari satu sheet yang barisnya terus bertambah.
+
+Waktu kerja paling banyak habis untuk hal yang sebenarnya bisa diotomatiskan: menghitung manual, menyalin nilai satu per satu dari sheet lain, lalu mengecek ulang karena takut ada yang terlewat. Sebagian besar pekerjaan itu cukup diselesaikan dengan beberapa rumus yang tepat.
+
+Buku ini saya susun sebagai teman kerja. Anda bisa membacanya berurutan dari BAB 1 kalau sedang belajar dari dasar. Anda juga bisa langsung membuka BAB tertentu saat lupa cara menulis `XLOOKUP`, bingung kenapa `VLOOKUP` menghasilkan `#N/A`, atau perlu contoh cepat untuk menghitung umur proyek.
+
+Setiap rumus disajikan dengan pola yang sama: contoh data, rumus, hasil, lalu penjelasan. Penjelasan teori sengaja dibuat pendek. Yang lebih penting adalah Anda bisa langsung menyalin rumusnya, mengganti referensi cell sesuai data sendiri, dan melihat hasilnya bekerja.
+
+Di akhir setiap BAB ada studi kasus dari situasi kerja yang umum: laporan penjualan, monitoring status proyek, pembersihan database customer, sampai dashboard eksekutif. Latihan bertingkat di bagian akhir buku membantu Anda menguji pemahaman sebelum memakainya di file kerja.
+
+Terima kasih sudah memilih buku ini. Semoga pekerjaan Anda dengan Excel jadi lebih cepat, lebih rapi, dan lebih sedikit lembur.
+
+@@raw
+<p style="margin-top:10mm"><strong>Pictor Roito Tumanggor</strong><br><span class="small">Penulis</span></p>
+@@end
+
+# Tentang Penulis
+
+@@raw
+<div style="display:grid;grid-template-columns:48mm 1fr;gap:9mm;align-items:start;margin-top:4mm">
+<div class="author-photo"><img src="../assets/penulis.jpg" alt="Pictor Roito Tumanggor"></div>
+<div>
+<div style="font-size:18pt;font-weight:900;color:#0B2B1C">Pictor Roito Tumanggor</div>
+<div style="font-size:9pt;color:#21A366;font-weight:700;letter-spacing:.14em;margin:1mm 0 4mm">TELEKOMUNIKASI · PROJECT MANAGEMENT · DATA PROCESSING</div>
+<p><strong>Pictor Roito Tumanggor</strong> merupakan profesional di bidang telekomunikasi, project management, data processing, dan digitalisasi sistem kerja yang memiliki pengalaman menggunakan Excel untuk monitoring, reporting, analisis data, dashboard, dan pengendalian proyek.</p>
+<p>Melalui <strong>MASTER RUMUS EXCEL</strong>, penulis membagikan kumpulan formula dan teknik Excel yang disusun secara praktis agar dapat langsung diterapkan dalam pekerjaan sehari-hari.</p>
+</div></div>
+<div class="quote" style="margin-top:12mm">"Jangan hanya belajar rumus Excel. Belajarlah memahami masalah, kemudian gunakan Excel untuk menyelesaikannya."<div style="font-size:9pt;font-weight:600;color:#5B6475;margin-top:2mm">Pictor Roito Tumanggor</div></div>
+@@end
+
+# Cara Menggunakan Buku
+
+Buku ini bisa dipakai dengan dua cara. Pemula sebaiknya membaca berurutan dari BAB 1 sampai BAB 10, karena BAB berikutnya memakai konsep dari BAB sebelumnya. Pengguna yang sudah terbiasa dengan Excel bisa langsung melompat ke BAB atau rumus yang sedang dibutuhkan lewat Daftar Isi.
+
+## Alur setiap rumus
+
+Semua rumus utama memakai urutan yang sama, jadi Anda cepat menemukan bagian yang dicari:
+
+| Bagian | Isi |
+|---|---|
+| Formula Card | Nama rumus, fungsi singkat, dan syntax |
+| Penjelasan Argument | Arti setiap argument di dalam kurung |
+| Contoh Data | Tabel data dengan huruf kolom dan nomor baris seperti di Excel |
+| Formula | Rumus siap salin |
+| Hasil | Nilai yang keluar dari rumus |
+| Penjelasan | Cara rumus bekerja langkah demi langkah |
+| Pro Tip, Common Mistake, Real World Use | Tips kerja, kesalahan umum, dan contoh pemakaian di kantor |
+
+Tabel Contoh Data ditampilkan seperti lembar Excel: huruf kolom (A, B, C...) di atas dan nomor baris di kiri. Baris 1 selalu judul kolom. Dengan begitu, referensi seperti `C2:C6` di rumus bisa langsung Anda cocokkan dengan posisi datanya.
+
+## Arti info card
+
+| Ikon | Nama | Kapan muncul |
+|---|---|---|
+| 💡 | PRO TIP | Cara kerja yang lebih cepat atau lebih aman |
+| ⚠️ | WARNING / COMMON MISTAKE | Kesalahan yang sering terjadi dan cara menghindarinya |
+| 📌 | IMPORTANT | Aturan yang wajib diingat |
+| 🚀 | ADVANCED | Teknik lanjutan untuk pengguna intermediate ke atas |
+| 💼 | REAL WORLD | Contoh pemakaian di pekerjaan nyata |
+| 🧠 | CHALLENGE | Latihan untuk menguji pemahaman |
+
+## Pengaturan regional: koma atau titik koma
+
+:::important PENTING: PEMISAH ARGUMENT
+Semua contoh di buku ini ditulis dengan pengaturan regional **English (United States)**: pemisah argument koma (`,`), tanda desimal titik (`.`), dan pemisah ribuan koma (`1,250,000`).
+
+Jika Excel Anda memakai pengaturan regional **Indonesia**, ganti koma pemisah argument dengan titik koma, dan titik desimal dengan koma.
+
+| English (US) | Indonesia |
+|---|---|
+| `=ROUND(A2, 2)` | `=ROUND(A2; 2)` |
+| `=IF(B2>=0.8,"OK","CEK")` | `=IF(B2>=0,8;"OK";"CEK")` |
+| `{1,2,3}` (array konstan) | `{1\2\3}` atau `{1;2;3}` sesuai pengaturan |
+
+Nama fungsi tetap dalam bahasa Inggris. Excel versi Indonesia di Windows umumnya tetap memakai nama fungsi Inggris seperti `SUM` dan `IF`.
+:::
+
+## Label versi Excel
+
+Rumus tanpa label bisa dipakai di Excel 2010 ke atas. Rumus yang lebih baru diberi label di pojok kanan formula card:
+
+| Label | Tersedia di |
+|---|---|
+| Excel 2013+ | Excel 2013, 2016, 2019, 2021, 2024, Microsoft 365 |
+| Excel 2019+ | Excel 2019, 2021, 2024, Microsoft 365 |
+| Excel 2021+ | Excel 2021, 2024, Microsoft 365, Excel untuk web |
+| Excel 2024 / 365 | Excel 2024, Microsoft 365, Excel untuk web |
+
+Jika file Anda akan dibuka oleh rekan kerja yang masih memakai Excel 2016 atau lebih lama, hindari fungsi berlabel 2019 ke atas, atau sediakan versi alternatifnya. Hampir setiap fungsi modern di buku ini disertai alternatif untuk Excel versi lama.
+
+## Tentang angka "300+ rumus"
+
+Angka 300+ di judul menghitung semua rumus siap pakai di buku ini: rumus di formula card, variasi rumus, kombinasi rumus, rumus studi kasus, rumus di cheat sheet, dan rumus kunci jawaban latihan. Buku ini memuat 132 formula card dengan pembahasan lengkap, lebih dari 800 contoh rumus, dan cheat sheet berisi 162 fungsi.
+
+## Tanggal acuan
+
+Contoh yang memakai `TODAY()` atau `NOW()` memakai tanggal acuan **15 Juni 2026**, kecuali disebutkan lain. Saat Anda mencoba rumusnya, hasil akan mengikuti tanggal di komputer Anda.
+
+## Cara berlatih
+
+1. Buka workbook kosong, lalu ketik ulang tabel Contoh Data persis di posisi yang sama (mulai dari cell A1).
+2. Ketik rumusnya sendiri. Mengetik membuat Anda lebih cepat hafal dibanding menyalin.
+3. Bandingkan hasil dengan bagian Hasil.
+4. Ubah satu angka di data, lalu lihat bagaimana hasil berubah.
+5. Kerjakan latihan di bagian Practice Questions, lalu cocokkan dengan Answer Key.
+
+# Daftar Isi
+
+@@toc

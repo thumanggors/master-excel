@@ -1,0 +1,16 @@
+<!doctype html><html><body>
+<script type="module">
+// renders PDF pages p..p+n-1 side by side into one PNG and saves it via the preview server
+import * as pdfjs from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs';
+pdfjs.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
+const q=new URLSearchParams(location.search), p=+q.get('p')||1, n=+q.get('n')||2, s=+q.get('s')||1.3;
+const doc=await pdfjs.getDocument('book?'+Date.now()).promise;
+const cs=[];
+for(let i=p;i<p+n&&i<=doc.numPages;i++){const pg=await doc.getPage(i);const v=pg.getViewport({scale:s});const c=document.createElement('canvas');c.width=v.width;c.height=v.height;await pg.render({canvasContext:c.getContext('2d'),viewport:v}).promise;cs.push(c);}
+const W=cs.reduce((a,c)=>a+c.width+8,0), H=Math.max(...cs.map(c=>c.height));
+const all=document.createElement('canvas');all.width=W;all.height=H;const g=all.getContext('2d');g.fillStyle='#666';g.fillRect(0,0,W,H);
+let x=0;for(const c of cs){g.drawImage(c,x,0);x+=c.width+8}
+const blob=await new Promise(r=>all.toBlob(r,'image/png'));
+await fetch('/save?name='+(q.get('o')||'shot.png'),{method:'POST',body:blob});
+document.title='done '+doc.numPages;
+</script></body></html>

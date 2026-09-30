@@ -1,0 +1,58 @@
+# Glossary
+
+@@raw
+<div class="gloss">
+@@end
+
+| Istilah | Arti |
+|---|---|
+| Absolute Reference | Referensi cell yang dikunci dengan `$` sehingga tidak bergeser saat rumus disalin, misalnya `$A$2` |
+| Argument | Nilai atau referensi yang dimasukkan ke dalam fungsi, dipisahkan koma (atau titik koma di regional Indonesia) |
+| Array | Kumpulan nilai dalam bentuk baris, kolom, atau tabel. Bisa berupa range atau hasil rumus |
+| Array Konstan | Array yang diketik langsung di rumus dengan kurung kurawal, misalnya `{"DELAY","ON PROGRESS"}` |
+| BAST | Berita Acara Serah Terima, dokumen penanda pekerjaan sudah diserahterimakan (dipakai di studi kasus) |
+| Case-sensitive | Membedakan huruf besar dan kecil. `FIND` dan `EXACT` bersifat case-sensitive, `SEARCH` tidak |
+| Cell | Pertemuan satu kolom dan satu baris, misalnya `D2` |
+| Criteria | Syarat yang harus dipenuhi data agar dihitung, misalnya `"DELAY"` atau `">=1000"` |
+| Criteria Range | Range berisi judul kolom dan syarat, dipakai oleh fungsi database seperti `DSUM` |
+| Ctrl+Shift+Enter (CSE) | Cara memasukkan array formula di Excel 2019 ke bawah |
+| Data Validation | Fitur untuk membatasi isian cell, misalnya dropdown atau aturan rumus |
+| Database (Excel) | Range berbentuk tabel dengan baris judul dan satu record per baris |
+| Delimiter | Karakter pemisah, misalnya koma pada `TEXTJOIN(", ", ...)` |
+| Dynamic Array | Kemampuan Excel modern mengembalikan banyak nilai dari satu rumus |
+| Excel Table | Range yang diubah dengan Ctrl+T. Otomatis meluas saat data bertambah dan memakai structured reference |
+| Formula | Instruksi perhitungan yang diawali tanda `=` |
+| Formula Bar | Kotak di atas sheet yang menampilkan isi asli cell aktif |
+| Function | Rumus siap pakai buatan Excel, misalnya `SUM` atau `XLOOKUP` |
+| Helper Column | Kolom bantu untuk memecah perhitungan panjang menjadi beberapa langkah |
+| Lookup | Proses mencari nilai di satu tabel lalu mengambil data terkait |
+| Mixed Reference | Referensi yang hanya mengunci kolom atau baris, misalnya `$A2` atau `A$2` |
+| Name Box | Kotak di kiri formula bar yang menampilkan alamat cell aktif atau nama range |
+| Name Manager | Menu untuk membuat dan mengelola nama range serta fungsi `LAMBDA` |
+| Named Range | Range yang diberi nama, misalnya `Libur` untuk daftar hari libur |
+| Nested Function | Fungsi di dalam fungsi, misalnya `ROUND(AVERAGE(...), 0)` |
+| Operator | Simbol perhitungan atau perbandingan: `+ - * / ^ & = <> > < >= <=` |
+| Paste Special > Values | Menempel hasil rumus sebagai nilai tetap, tanpa rumusnya |
+| Range | Kumpulan cell yang berdekatan, misalnya `A2:D6` |
+| Relative Reference | Referensi yang bergeser mengikuti posisi rumus saat disalin, misalnya `A2` |
+| Serial Number | Angka yang dipakai Excel untuk menyimpan tanggal. 15 Juni 2026 = 46188 |
+| SLA | Service Level Agreement, batas waktu penyelesaian yang disepakati |
+| Spill | Hasil rumus dynamic array yang mengisi beberapa cell sekaligus |
+| Spill Reference | Referensi ke seluruh hasil spill dengan tanda `#`, misalnya `K2#` |
+| Structured Reference | Referensi berbasis nama Table dan kolom, misalnya `TabelPenjualan[Total]` |
+| Syntax | Aturan penulisan fungsi: nama, tanda kurung, dan urutan argument |
+| Text Number | Angka yang tersimpan sebagai teks sehingga tidak ikut dihitung |
+| Wildcard | Karakter pengganti di kriteria: `*` untuk banyak karakter dan `?` untuk satu karakter |
+| Workbook | File Excel secara keseluruhan |
+| Worksheet | Satu lembar kerja di dalam workbook |
+| `#CALC!` | Error perhitungan array, misalnya hasil kosong pada fungsi tertentu |
+| `#DIV/0!` | Error pembagian dengan nol |
+| `#N/A` | Error data tidak ditemukan |
+| `#NAME?` | Nama fungsi tidak dikenal, salah ketik, atau tidak ada di versi Excel tersebut |
+| `#REF!` | Referensi tidak valid, biasanya karena baris atau kolom sumber dihapus |
+| `#SPILL!` | Area spill terhalang data lain |
+| `#VALUE!` | Tipe data tidak sesuai, misalnya teks ikut dihitung |
+
+@@raw
+</div>
+@@end

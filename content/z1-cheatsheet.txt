@@ -1,0 +1,227 @@
+# Excel Formula Cheat Sheet
+
+Referensi cepat fungsi Excel yang dibahas di buku ini, ditambah beberapa fungsi pendukung yang sering dipakai di kantor. Kolom Versi kosong berarti fungsi tersedia di Excel 2010 ke atas.
+
+@@raw
+<div class="cheat">
+@@end
+
+## Matematika & Pembulatan
+
+| Formula | Fungsi | Contoh | Versi |
+|---|---|---|---|
+| SUM | Menjumlahkan angka | `=SUM(A2:A10)` | |
+| SUMIF | Menjumlahkan dengan 1 kriteria | `=SUMIF(A2:A10,"Jakarta",C2:C10)` | |
+| SUMIFS | Menjumlahkan dengan banyak kriteria | `=SUMIFS(C2:C10,A2:A10,"Jakarta",B2:B10,"Hardware")` | |
+| SUMPRODUCT | Mengalikan array lalu menjumlahkan | `=SUMPRODUCT(B2:B10,C2:C10)` | |
+| PRODUCT | Mengalikan semua angka | `=PRODUCT(B2:D2)` | |
+| ABS | Nilai mutlak | `=ABS(C2-B2)` | |
+| MOD | Sisa pembagian | `=MOD(B2,24)` | |
+| POWER | Pangkat | `=POWER(1.08,3)` | |
+| SQRT | Akar kuadrat | `=SQRT(900000)` | |
+| INT | Bulatkan ke bawah ke bilangan bulat | `=INT(B2/C2)` | |
+| TRUNC | Potong desimal | `=TRUNC(A2,2)` | |
+| ROUND | Bulatkan ke terdekat | `=ROUND(A2*11%,0)` | |
+| ROUNDUP | Bulatkan selalu ke atas | `=ROUNDUP(47/12,0)` | |
+| ROUNDDOWN | Bulatkan selalu ke bawah | `=ROUNDDOWN(A2/10000,0)` | |
+| MROUND | Bulatkan ke kelipatan terdekat | `=MROUND(A2,500)` | |
+| CEILING | Naik ke kelipatan | `=CEILING(A2,1)` | |
+| CEILING.MATH | Naik ke kelipatan (versi baru) | `=CEILING.MATH(A2)` | 2013+ |
+| FLOOR | Turun ke kelipatan | `=FLOOR(A2,0.5)` | |
+| FLOOR.MATH | Turun ke kelipatan (versi baru) | `=FLOOR.MATH(A2)` | 2013+ |
+| RAND | Angka acak 0 sampai 1 | `=RAND()` | |
+| RANDBETWEEN | Angka acak bulat dalam rentang | `=RANDBETWEEN(1,100)` | |
+| SUBTOTAL | Total yang mengabaikan baris terfilter | `=SUBTOTAL(9,C2:C100)` | |
+| AGGREGATE | Total yang bisa mengabaikan error | `=AGGREGATE(9,6,C2:C100)` | |
+
+## Statistik & Hitung Data
+
+| Formula | Fungsi | Contoh | Versi |
+|---|---|---|---|
+| AVERAGE | Rata-rata | `=AVERAGE(B2:B10)` | |
+| AVERAGEIF | Rata-rata dengan 1 kriteria | `=AVERAGEIF(B2:B10,"Sales",D2:D10)` | |
+| AVERAGEIFS | Rata-rata dengan banyak kriteria | `=AVERAGEIFS(D2:D10,B2:B10,"Sales",C2:C10,"Tetap")` | |
+| MEDIAN | Nilai tengah | `=MEDIAN(B2:B10)` | |
+| MODE | Nilai paling sering muncul | `=MODE(B2:B10)` | |
+| MODE.SNGL | Modus (nama baru MODE) | `=MODE.SNGL(B2:B10)` | |
+| MAX | Nilai terbesar | `=MAX(B2:B10)` | |
+| MIN | Nilai terkecil | `=MIN(B2:B10)` | |
+| MAXIFS | Nilai terbesar dengan kriteria | `=MAXIFS(G2:G11,C2:C11,"Banten")` | 2019+ |
+| MINIFS | Nilai terkecil dengan kriteria | `=MINIFS(F2:F11,H2:H11,"DELAY")` | 2019+ |
+| LARGE | Nilai terbesar ke-k | `=LARGE(B2:B10,2)` | |
+| SMALL | Nilai terkecil ke-k | `=SMALL(B2:B10,2)` | |
+| RANK | Peringkat | `=RANK(B2,$B$2:$B$10,0)` | |
+| RANK.EQ | Peringkat (nama baru RANK) | `=RANK.EQ(B2,$B$2:$B$10,0)` | |
+| COUNT | Hitung cell berisi angka | `=COUNT(B2:B10)` | |
+| COUNTA | Hitung cell tidak kosong | `=COUNTA(A2:A10)` | |
+| COUNTBLANK | Hitung cell kosong | `=COUNTBLANK(B2:B10)` | |
+| COUNTIF | Hitung dengan 1 kriteria | `=COUNTIF(H2:H10,"DELAY")` | |
+| COUNTIFS | Hitung dengan banyak kriteria | `=COUNTIFS(C2:C10,"Banten",H2:H10,"DELAY")` | |
+| STDEV.S | Standar deviasi sampel | `=STDEV.S(B2:B30)` | |
+| VAR.S | Varians sampel | `=VAR.S(B2:B30)` | |
+| PERCENTILE.INC | Nilai persentil | `=PERCENTILE.INC(B2:B30,0.9)` | |
+| QUARTILE.INC | Nilai kuartil | `=QUARTILE.INC(B2:B30,1)` | |
+| CORREL | Koefisien korelasi dua data | `=CORREL(B2:B13,C2:C13)` | |
+| FORECAST.LINEAR | Proyeksi tren linear | `=FORECAST.LINEAR(13,C2:C13,B2:B13)` | 2016+ |
+
+## Logika
+
+| Formula | Fungsi | Contoh | Versi |
+|---|---|---|---|
+| IF | Keputusan dua cabang | `=IF(B2>=75,"LULUS","REMEDIAL")` | |
+| IFS | Keputusan banyak kondisi | `=IFS(B2>=90,"A",B2>=80,"B",TRUE,"C")` | 2019+ |
+| AND | Semua kondisi benar | `=AND(B2>=100%,C2>=95%)` | |
+| OR | Minimal satu kondisi benar | `=OR(B2>=1000000000,C2="Key Account")` | |
+| NOT | Membalik logika | `=NOT(B2="Closed")` | |
+| XOR | Tepat satu (jumlah ganjil) kondisi benar | `=XOR(B2="Ya",C2="Ya")` | 2013+ |
+| SWITCH | Pencocokan dari daftar | `=SWITCH(A2,"JKT","Jakarta","BDG","Bandung","Lainnya")` | 2019+ |
+| IFERROR | Pengganti untuk semua error | `=IFERROR(C2/B2,0)` | |
+| IFNA | Pengganti khusus #N/A | `=IFNA(VLOOKUP(E2,A2:B10,2,FALSE),"-")` | 2013+ |
+
+## Teks
+
+| Formula | Fungsi | Contoh | Versi |
+|---|---|---|---|
+| LEFT | Ambil karakter dari kiri | `=LEFT(A2,3)` | |
+| RIGHT | Ambil karakter dari kanan | `=RIGHT(A2,4)` | |
+| MID | Ambil karakter dari tengah | `=MID(A2,5,4)` | |
+| LEN | Panjang teks | `=LEN(A2)` | |
+| LOWER | Huruf kecil semua | `=LOWER(A2)` | |
+| UPPER | Huruf kapital semua | `=UPPER(A2)` | |
+| PROPER | Huruf awal kata kapital | `=PROPER(A2)` | |
+| TRIM | Buang spasi berlebih | `=TRIM(A2)` | |
+| CLEAN | Buang karakter tak tercetak | `=CLEAN(A2)` | |
+| SUBSTITUTE | Ganti teks berdasarkan isi | `=SUBSTITUTE(A2,"-","")` | |
+| REPLACE | Ganti teks berdasarkan posisi | `=REPLACE(A2,5,4,"****")` | |
+| FIND | Posisi teks (case-sensitive) | `=FIND("@",A2)` | |
+| SEARCH | Posisi teks (tidak case-sensitive, wildcard) | `=SEARCH("fo",A2)` | |
+| EXACT | Bandingkan teks persis | `=EXACT(A2,B2)` | |
+| CONCATENATE | Gabung teks (versi lama) | `=CONCATENATE(A2," ",B2)` | |
+| CONCAT | Gabung teks dan range | `=CONCAT(A2,"-",B2)` | 2019+ |
+| TEXTJOIN | Gabung dengan pemisah | `=TEXTJOIN(", ",TRUE,A2:E2)` | 2019+ |
+| VALUE | Teks angka menjadi angka | `=VALUE(A2)` | |
+| NUMBERVALUE | Teks angka dengan pemisah tertentu | `=NUMBERVALUE("1.250,5",",",".")` | 2013+ |
+| TEXT | Angka atau tanggal menjadi teks berformat | `=TEXT(B2,"#,##0")` | |
+| REPT | Ulangi teks | `=REPT("*",5)` | |
+| CHAR | Karakter dari kode | `=CHAR(10)` | |
+| CODE | Kode dari karakter pertama | `=CODE(A2)` | |
+| TEXTBEFORE | Teks sebelum pemisah | `=TEXTBEFORE(A2,"@")` | 2024 / 365 |
+| TEXTAFTER | Teks setelah pemisah | `=TEXTAFTER(A2,"@")` | 2024 / 365 |
+| TEXTSPLIT | Pecah teks ke beberapa cell | `=TEXTSPLIT(A2,",")` | 2024 / 365 |
+
+## Tanggal & Waktu
+
+| Formula | Fungsi | Contoh | Versi |
+|---|---|---|---|
+| TODAY | Tanggal hari ini | `=TODAY()` | |
+| NOW | Tanggal dan jam saat ini | `=NOW()` | |
+| DATE | Susun tanggal | `=DATE(2026,6,15)` | |
+| TIME | Susun waktu | `=TIME(8,30,0)` | |
+| DAY | Ambil tanggal | `=DAY(A2)` | |
+| MONTH | Ambil bulan | `=MONTH(A2)` | |
+| YEAR | Ambil tahun | `=YEAR(A2)` | |
+| HOUR | Ambil jam | `=HOUR(A2)` | |
+| MINUTE | Ambil menit | `=MINUTE(A2)` | |
+| SECOND | Ambil detik | `=SECOND(A2)` | |
+| DATEVALUE | Teks tanggal menjadi tanggal | `=DATEVALUE("2026-06-15")` | |
+| TIMEVALUE | Teks waktu menjadi waktu | `=TIMEVALUE("08:30")` | |
+| DAYS | Selisih hari | `=DAYS(C2,B2)` | 2013+ |
+| DATEDIF | Selisih tahun, bulan, hari | `=DATEDIF(B2,C2,"Y")` | |
+| EDATE | Tambah bulan | `=EDATE(B2,6)` | |
+| EOMONTH | Akhir bulan | `=EOMONTH(B2,0)` | |
+| YEARFRAC | Selisih dalam pecahan tahun | `=YEARFRAC(B2,C2,1)` | |
+| WEEKDAY | Urutan hari dalam minggu | `=WEEKDAY(A2,2)` | |
+| WEEKNUM | Nomor minggu | `=WEEKNUM(A2)` | |
+| ISOWEEKNUM | Nomor minggu ISO | `=ISOWEEKNUM(A2)` | 2013+ |
+| WORKDAY | Tanggal setelah n hari kerja | `=WORKDAY(B2,10,Libur)` | |
+| WORKDAY.INTL | WORKDAY dengan pola libur kustom | `=WORKDAY.INTL(B2,10,11)` | |
+| NETWORKDAYS | Jumlah hari kerja | `=NETWORKDAYS(B2,C2,Libur)` | |
+| NETWORKDAYS.INTL | NETWORKDAYS dengan pola libur kustom | `=NETWORKDAYS.INTL(B2,C2,"0000001")` | |
+
+## Lookup & Referensi
+
+| Formula | Fungsi | Contoh | Versi |
+|---|---|---|---|
+| VLOOKUP | Cari vertikal | `=VLOOKUP(J2,$A$2:$G$7,2,FALSE)` | |
+| HLOOKUP | Cari horizontal | `=HLOOKUP("Zona 2",$A$1:$D$3,2,FALSE)` | |
+| LOOKUP | Cari mendekati di data urut | `=LOOKUP(D2,A2:A5,B2:B5)` | |
+| INDEX | Ambil isi berdasarkan posisi | `=INDEX(A2:G7,4,2)` | |
+| MATCH | Cari posisi | `=MATCH("MTR-004",A2:A7,0)` | |
+| XLOOKUP | Lookup modern | `=XLOOKUP(J2,A2:A7,F2:F7,"Tidak ada")` | 2021+ |
+| XMATCH | MATCH modern | `=XMATCH("OptiNet",C2:C7,0,-1)` | 2021+ |
+| CHOOSE | Pilih dari daftar | `=CHOOSE(B2,"Tinggi","Sedang","Rendah")` | |
+| OFFSET | Referensi bergeser dari titik awal | `=SUM(OFFSET(B1,1,0,3,1))` | |
+| INDIRECT | Referensi dari teks | `=INDIRECT("Jan!B2")` | |
+| ROW | Nomor baris | `=ROW()` | |
+| ROWS | Jumlah baris range | `=ROWS(A2:A10)` | |
+| COLUMN | Nomor kolom | `=COLUMN(C1)` | |
+| COLUMNS | Jumlah kolom range | `=COLUMNS(A1:F1)` | |
+| HYPERLINK | Membuat tautan | `=HYPERLINK("#Data!A1","Ke Data")` | |
+
+## Dynamic Array, LET & LAMBDA
+
+| Formula | Fungsi | Contoh | Versi |
+|---|---|---|---|
+| FILTER | Saring baris | `=FILTER(A2:F9,E2:E9="DELAY")` | 2021+ |
+| SORT | Urutkan | `=SORT(A2:F9,6,-1)` | 2021+ |
+| SORTBY | Urutkan berdasarkan range lain | `=SORTBY(B2:B9,E2:E9,1,F2:F9,-1)` | 2021+ |
+| UNIQUE | Daftar unik | `=UNIQUE(D2:D9)` | 2021+ |
+| SEQUENCE | Deret angka | `=SEQUENCE(10)` | 2021+ |
+| TRANSPOSE | Putar baris dan kolom | `=TRANSPOSE(A1:D2)` | |
+| LET | Beri nama perhitungan | `=LET(t,SUM(B2:B9),a,SUM(C2:C9),a/t)` | 2021+ |
+| LAMBDA | Membuat fungsi sendiri | `=LAMBDA(a,t,IF(t=0,0,a/t))(45,50)` | 2024 / 365 |
+| TAKE | Ambil n baris atau kolom | `=TAKE(SORT(A2:F9,6,-1),3)` | 2024 / 365 |
+| DROP | Buang n baris atau kolom | `=DROP(A1:F9,1)` | 2024 / 365 |
+| CHOOSECOLS | Pilih kolom | `=CHOOSECOLS(A2:F9,2,5)` | 2024 / 365 |
+| CHOOSEROWS | Pilih baris | `=CHOOSEROWS(A2:F9,1,-1)` | 2024 / 365 |
+| VSTACK | Tumpuk vertikal | `=VSTACK(A1:B4,D2:E3)` | 2024 / 365 |
+| HSTACK | Susun horizontal | `=HSTACK(A2:A9,E2:E9)` | 2024 / 365 |
+| TOCOL | Jadikan satu kolom | `=TOCOL(B2:D3,1)` | 2024 / 365 |
+| TOROW | Jadikan satu baris | `=TOROW(UNIQUE(C2:C9))` | 2024 / 365 |
+
+## Informasi & Pengecekan
+
+| Formula | Fungsi | Contoh | Versi |
+|---|---|---|---|
+| ISBLANK | Cek cell kosong | `=ISBLANK(B2)` | |
+| ISNUMBER | Cek angka | `=ISNUMBER(B2)` | |
+| ISTEXT | Cek teks | `=ISTEXT(B2)` | |
+| ISERROR | Cek semua error | `=ISERROR(A2)` | |
+| ISNA | Cek #N/A | `=ISNA(MATCH(A2,C2:C10,0))` | |
+| ISERR | Cek error selain #N/A | `=ISERR(A2)` | |
+| ISLOGICAL | Cek nilai TRUE/FALSE | `=ISLOGICAL(B2)` | |
+| ISFORMULA | Cek cell berisi rumus | `=ISFORMULA(C2)` | 2013+ |
+| NA | Menghasilkan #N/A dengan sengaja | `=IF(B2="",NA(),B2)` | |
+
+## Database
+
+| Formula | Fungsi | Contoh | Versi |
+|---|---|---|---|
+| DSUM | Jumlah dengan range kriteria | `=DSUM($A$1:$H$11,"Actual",J1:K2)` | |
+| DAVERAGE | Rata-rata dengan range kriteria | `=DAVERAGE($A$1:$H$11,"Actual",J1:J2)` | |
+| DCOUNT | Hitung angka dengan range kriteria | `=DCOUNT($A$1:$H$11,"Target",J1:J2)` | |
+| DCOUNTA | Hitung isian dengan range kriteria | `=DCOUNTA($A$1:$H$11,"Project",J1:J2)` | |
+| DMAX | Nilai terbesar dengan range kriteria | `=DMAX($A$1:$H$11,"Actual",J1:J2)` | |
+| DMIN | Nilai terkecil dengan range kriteria | `=DMIN($A$1:$H$11,"Target",J1:J2)` | |
+| DGET | Ambil satu nilai dengan range kriteria | `=DGET($A$1:$H$11,"PIC",J1:J2)` | |
+
+## Keuangan Dasar
+
+| Formula | Fungsi | Contoh | Versi |
+|---|---|---|---|
+| PMT | Cicilan per periode | `=PMT(10%/12,36,-100000000)` | |
+| FV | Nilai masa depan | `=FV(6%/12,24,-1000000)` | |
+| PV | Nilai sekarang | `=PV(8%,5,-10000000)` | |
+| NPV | Net present value | `=NPV(10%,C3:C7)+C2` | |
+| IRR | Internal rate of return | `=IRR(C2:C7)` | |
+| RATE | Suku bunga per periode | `=RATE(36,-3500000,100000000)` | |
+| NPER | Jumlah periode | `=NPER(1%,-2000000,50000000)` | |
+| SLN | Penyusutan garis lurus per periode | `=SLN(60000000,6000000,5)` | |
+
+@@raw
+</div>
+@@end
+
+:::tip
+Di Excel, ketik `=` lalu beberapa huruf awal nama fungsi, misalnya `=XL`. Excel menampilkan daftar fungsi yang cocok. Tekan **Tab** untuk memilih, lalu **Ctrl+Shift+A** untuk menampilkan nama semua argument-nya.
+:::

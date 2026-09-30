@@ -1,0 +1,479 @@
+@@chapter 07 | FILTER, SORT & DYNAMIC ARRAY
+desc: Excel modern bisa mengembalikan banyak hasil dari satu rumus. Hasilnya "tumpah" (spill) ke cell di sekitarnya dan ikut berubah saat data sumber berubah. Dengan fungsi dynamic array, laporan yang dulu dibuat dengan filter manual bisa diperbarui otomatis.
+goals:
+- Memahami konsep spill dan referensi spill (#)
+- Menyaring, mengurutkan, dan mengambil data unik dengan rumus
+- Membentuk ulang data dengan TAKE, DROP, CHOOSECOLS, dan CHOOSEROWS
+- Menggabungkan range dengan VSTACK dan HSTACK
+- Membuat report proyek yang berubah otomatis berdasarkan pilihan filter
+@@end
+
+## 7.1 Konsep Dynamic Array
+
+Rumus biasa menghasilkan satu nilai di satu cell. Rumus dynamic array bisa menghasilkan banyak nilai, lalu Excel mengisikan hasilnya ke cell di bawah dan di kanannya. Area hasil ini disebut **spill range**.
+
+| Istilah | Arti |
+|---|---|
+| Spill | Hasil rumus mengisi beberapa cell sekaligus. Hanya cell pertama yang berisi rumus |
+| Referensi spill `#` | `H2#` berarti seluruh hasil spill yang dimulai di H2, berapa pun ukurannya |
+| `#SPILL!` | Area spill terhalang cell yang sudah berisi sesuatu |
+
+:::version KOMPATIBILITAS VERSI
+`FILTER`, `SORT`, `SORTBY`, `UNIQUE`, dan `SEQUENCE` tersedia di **Excel 2021, 2024, Microsoft 365, dan Excel untuk web**.
+
+`TAKE`, `DROP`, `CHOOSECOLS`, `CHOOSEROWS`, `VSTACK`, `HSTACK`, `TOCOL`, dan `TOROW` tersedia di **Excel 2024, Microsoft 365, dan Excel untuk web**.
+
+`TRANSPOSE` tersedia di semua versi. Di Excel 2019 ke bawah, `TRANSPOSE` harus dimasukkan sebagai array formula (pilih range hasil, ketik rumus, tekan **Ctrl+Shift+Enter**).
+
+Di Excel versi lama, fungsi-fungsi modern ini menghasilkan `#NAME?`. Alternatifnya adalah AutoFilter, Advanced Filter, atau PivotTable.
+:::
+
+### Data yang dipakai di BAB ini
+
+Nilai proyek dalam juta rupiah. Nama provider adalah data contoh.
+
+@sheet A1
+| ID | Project | Provinsi | Provider | Status | Nilai |
+| P-01 | FO Backbone Medan | Sumatera Utara | NetraCom | ON PROGRESS | 850 |
+| P-02 | Tower Bekasi | Jawa Barat | Nusanet | DELAY | 420 |
+| P-03 | FTTH Bandung | Jawa Barat | NetraCom | COMPLETED | 610 |
+| P-04 | BTS Bogor | Jawa Barat | Selulink | ON PROGRESS | 380 |
+| P-05 | ODC Depok | Jawa Barat | Nusanet | COMPLETED | 275 |
+| P-06 | FO Access Tangerang | Banten | Selulink | DELAY | 530 |
+| P-07 | Microcell Jakarta | DKI Jakarta | NetraCom | ON PROGRESS | 295 |
+| P-08 | FTTH Medan | Sumatera Utara | Nusanet | DELAY | 470 |
+
+:::tip
+Ubah data seperti ini menjadi Excel Table (Ctrl+T) bernama `Proyek`. Rumus seperti `=FILTER(Proyek, Proyek[Status]="DELAY")` otomatis ikut membaca proyek baru yang ditambahkan di baris bawah.
+:::
+
+## 7.2 Menyaring, Mengurutkan, dan Data Unik
+
+@@fx FILTER | Excel 2021+
+fungsi: Menampilkan baris yang memenuhi kriteria. Hasilnya berubah otomatis saat data sumber berubah.
+syntax: =FILTER(array, include, [if_empty])
+args:
+array | Range data yang disaring
+include | Kondisi TRUE/FALSE per baris, tingginya sama dengan `array`
+[if_empty] | Nilai jika tidak ada baris yang cocok
+data:
+@cap Data proyek A1:F9 (lihat 7.1)
+| ID | Project | Provinsi | Provider | Status | Nilai |
+| P-01 | FO Backbone Medan | Sumatera Utara | NetraCom | ON PROGRESS | 850 |
+| P-02 | Tower Bekasi | Jawa Barat | Nusanet | DELAY | 420 |
+formula:
+=FILTER(A2:F9, C2:C9="Jawa Barat")
+=FILTER(A2:F9, (C2:C9="Jawa Barat")*(E2:E9="COMPLETED"))
+=FILTER(A2:F9, (E2:E9="DELAY")+(F2:F9>=800), "Tidak ada data")
+hasil:
+Rumus 1: P-02, P-03, P-04, P-05. Rumus 2: P-03, P-05. Rumus 3: P-01, P-02, P-06, P-08.
+jelas: Tanda `*` di antara kondisi berarti AND (kedua kondisi harus benar). Tanda `+` berarti OR (salah satu cukup). Rumus ketiga mengambil proyek DELAY ditambah proyek bernilai minimal 800 juta, sehingga P-01 yang ON PROGRESS ikut masuk.
+tip: Ambil kolom tertentu saja dengan membungkusnya: `=CHOOSECOLS(FILTER(A2:F9, E2:E9="DELAY"), 2, 6)` hanya menampilkan nama proyek dan nilai.
+salah: Memakai `AND()` atau `OR()` di argument `include`. Kedua fungsi itu meringkas seluruh array menjadi satu TRUE/FALSE, sehingga filter tidak bekerja per baris. Gunakan `*` dan `+`.
+real: Daftar proyek per status, daftar invoice jatuh tempo minggu ini, daftar karyawan per departemen.
+@@end
+
+@@fx SORT | Excel 2021+
+fungsi: Mengurutkan range berdasarkan kolom tertentu, tanpa mengubah urutan data asli.
+syntax: =SORT(array, [sort_index], [sort_order], [by_col])
+args:
+array | Range yang diurutkan
+[sort_index] | Nomor kolom acuan urutan. Default 1
+[sort_order] | 1 = naik (default), -1 = turun
+[by_col] | FALSE = urut per baris (default), TRUE = urut per kolom
+data:
+@cap Data proyek A1:F9 (lihat 7.1)
+| ID | Project | Provinsi | Provider | Status | Nilai |
+| P-01 | FO Backbone Medan | Sumatera Utara | NetraCom | ON PROGRESS | 850 |
+| P-02 | Tower Bekasi | Jawa Barat | Nusanet | DELAY | 420 |
+formula: =SORT(A2:F9, 6, -1)
+hasil:
+| ID | Nilai |
+|---|---|
+| P-01 | 850 |
+| P-03 | 610 |
+| P-06 | 530 |
+| P-08 | 470 |
+| P-02 | 420 |
+| P-04 | 380 |
+| P-07 | 295 |
+| P-05 | 275 |
+jelas: Kolom ke-6 (Nilai) dipakai sebagai acuan dan diurutkan dari besar ke kecil. Seluruh kolom lain ikut berpindah sesuai barisnya (tabel hasil di atas hanya menampilkan ID dan Nilai).
+tip: Urutkan hasil filter secara langsung: `=SORT(FILTER(A2:F9, E2:E9="DELAY"), 6, -1)`.
+salah: Menulis judul kolom di dalam `array` (A1:F9). Baris judul ikut diurutkan dan berpindah ke tengah data. Mulai dari baris data (A2).
+real: Ranking proyek berdasarkan nilai, daftar piutang dari yang terbesar, urutan karyawan berdasarkan nama.
+@@end
+
+@@fx SORTBY | Excel 2021+
+fungsi: Mengurutkan range berdasarkan range lain, dan bisa memakai beberapa level urutan.
+syntax: =SORTBY(array, by_array1, [sort_order1], [by_array2, sort_order2], ...)
+args:
+array | Range yang ditampilkan
+by_array1 | Range acuan urutan pertama
+[sort_order1] | 1 = naik, -1 = turun
+[by_array2, sort_order2] | Acuan urutan kedua dan seterusnya
+data:
+@cap Data proyek A1:F9 (lihat 7.1)
+| ID | Project | Provinsi | Provider | Status | Nilai |
+| P-01 | FO Backbone Medan | Sumatera Utara | NetraCom | ON PROGRESS | 850 |
+formula: =SORTBY(B2:B9, E2:E9, 1, F2:F9, -1)
+hasil:
+| Project | (Status) | (Nilai) |
+|---|---|---|
+| FTTH Bandung | COMPLETED | 610 |
+| ODC Depok | COMPLETED | 275 |
+| FO Access Tangerang | DELAY | 530 |
+| FTTH Medan | DELAY | 470 |
+| Tower Bekasi | DELAY | 420 |
+| FO Backbone Medan | ON PROGRESS | 850 |
+| BTS Bogor | ON PROGRESS | 380 |
+| Microcell Jakarta | ON PROGRESS | 295 |
+jelas: Hanya kolom Project yang ditampilkan, tetapi urutannya ditentukan oleh Status (A-Z) lalu Nilai (besar ke kecil) di dalam status yang sama. Kolom Status dan Nilai di tabel hasil hanya sebagai keterangan.
+tip: `SORTBY` bisa mengurutkan berdasarkan kolom yang tidak ikut ditampilkan, sesuatu yang tidak bisa dilakukan `SORT`.
+salah: `by_array` beda tinggi dengan `array` menghasilkan `#VALUE!`.
+real: Daftar proyek per status lalu nilai, daftar karyawan per departemen lalu masa kerja.
+@@end
+
+@@fx UNIQUE | Excel 2021+
+fungsi: Mengambil daftar nilai unik (tanpa duplikat) dari sebuah range.
+syntax: =UNIQUE(array, [by_col], [exactly_once])
+args:
+array | Range sumber
+[by_col] | FALSE = bandingkan per baris (default)
+[exactly_once] | TRUE = hanya nilai yang muncul tepat satu kali
+data:
+@cap Kolom Provider D2:D9 dan Provinsi C2:C9 dari data proyek
+| ID | Project | Provinsi | Provider |
+| P-01 | FO Backbone Medan | Sumatera Utara | NetraCom |
+| P-02 | Tower Bekasi | Jawa Barat | Nusanet |
+| P-03 | FTTH Bandung | Jawa Barat | NetraCom |
+| P-04 | BTS Bogor | Jawa Barat | Selulink |
+| P-05 | ODC Depok | Jawa Barat | Nusanet |
+| P-06 | FO Access Tangerang | Banten | Selulink |
+| P-07 | Microcell Jakarta | DKI Jakarta | NetraCom |
+| P-08 | FTTH Medan | Sumatera Utara | Nusanet |
+formula:
+=UNIQUE(D2:D9)
+=SORT(UNIQUE(C2:C9))
+=COUNTA(UNIQUE(C2:C9))
+=UNIQUE(C2:C9, FALSE, TRUE)
+hasil:
+Rumus 1: NetraCom, Nusanet, Selulink. Rumus 2: Banten, DKI Jakarta, Jawa Barat, Sumatera Utara. Rumus 3: 4. Rumus 4: Banten, DKI Jakarta.
+jelas: `UNIQUE` mempertahankan urutan kemunculan pertama. Dibungkus `SORT`, hasilnya urut abjad. `COUNTA` menghitung berapa provinsi berbeda. Rumus keempat hanya menampilkan provinsi yang muncul sekali.
+tip: Daftar unik ini ideal sebagai sumber dropdown. Letakkan `=SORT(UNIQUE(C2:C9))` di sheet bantu, lalu pakai referensi spill-nya (misalnya `=$M$2#`) sebagai Source di Data Validation.
+salah: Data yang terlihat sama tetapi berbeda spasi atau ejaan ("Jawa Barat" dan "Jawa Barat ") dianggap dua nilai berbeda. Bersihkan dulu dengan `TRIM` (BAB 8).
+real: Daftar customer unik, daftar provinsi untuk dropdown, jumlah vendor berbeda dalam satu periode.
+@@end
+
+@@fx SEQUENCE | Excel 2021+
+fungsi: Membuat deret angka berurutan dalam jumlah baris dan kolom tertentu.
+syntax: =SEQUENCE(rows, [columns], [start], [step])
+args:
+rows | Jumlah baris
+[columns] | Jumlah kolom. Default 1
+[start] | Angka awal. Default 1
+[step] | Kenaikan tiap langkah. Default 1
+data:
+@cap Data proyek A1:F9 (lihat 7.1), 8 baris data
+| ID | Project |
+| P-01 | FO Backbone Medan |
+| P-02 | Tower Bekasi |
+formula:
+=SEQUENCE(COUNTA(A2:A9))
+=SEQUENCE(7, 1, DATE(2026,6,15), 1)
+=SEQUENCE(1, 4, 100, 50)
+hasil:
+Rumus 1: angka 1 sampai 8 ke bawah. Rumus 2: tanggal 15 Jun sampai 21 Jun 2026 (format sebagai Date). Rumus 3: 100, 150, 200, 250 ke samping.
+jelas: Jumlah baris pada rumus pertama mengikuti jumlah data, sehingga nomor urut bertambah sendiri saat proyek baru ditambahkan. Rumus kedua membuat 7 tanggal berturut-turut mulai 15 Juni.
+tip: Jadwal mingguan otomatis: `=SEQUENCE(5, 1, DATE(2026,6,1), 7)` menghasilkan tanggal setiap Senin di bulan Juni 2026 (1, 8, 15, 22, 29).
+salah: Menjadikan `SEQUENCE` sebagai ID permanen. Nomor dari `SEQUENCE` berubah jika baris dihapus atau diurutkan. Untuk ID tetap, ketik nilainya atau salin sebagai values.
+real: Nomor urut otomatis, kalender harian, header bulan untuk tabel rencana.
+@@end
+
+@@fx TRANSPOSE
+fungsi: Memutar orientasi range: baris menjadi kolom dan kolom menjadi baris.
+syntax: =TRANSPOSE(array)
+args:
+array | Range yang diputar
+data:
+| Bulan | Jan | Feb | Mar |
+| Target | 100 | 120 | 150 |
+formula: =TRANSPOSE(A1:D2)
+hasil:
+| Bulan | Target |
+|---|---|
+| Jan | 100 |
+| Feb | 120 |
+| Mar | 150 |
+jelas: Range 2 baris × 4 kolom berubah menjadi 4 baris × 2 kolom. Hasil tetap terhubung ke sumber, jadi perubahan target ikut terlihat.
+tip: Di Excel 2019 ke bawah, pilih dulu area hasil 4 baris × 2 kolom, ketik rumusnya, lalu tekan **Ctrl+Shift+Enter**. Untuk transpose sekali pakai tanpa rumus, gunakan Copy lalu Paste Special > Transpose.
+salah: Mengetik `TRANSPOSE` di satu cell di Excel lama lalu menekan Enter biasa. Hanya nilai pertama yang muncul.
+real: Mengubah tabel bulanan mendatar menjadi tegak lurus untuk grafik atau pivot, menyesuaikan format laporan dengan template.
+@@end
+
+## 7.3 Membentuk Ulang Data
+
+@@fx TAKE | Excel 2024 / 365
+fungsi: Mengambil sejumlah baris atau kolom dari awal atau akhir sebuah array.
+syntax: =TAKE(array, rows, [columns])
+args:
+array | Range atau hasil rumus sumber
+rows | Jumlah baris. Positif dari atas, negatif dari bawah
+[columns] | Jumlah kolom. Positif dari kiri, negatif dari kanan
+data:
+@cap Data proyek A1:F9 (lihat 7.1)
+| ID | Project | Provinsi | Provider | Status | Nilai |
+| P-01 | FO Backbone Medan | Sumatera Utara | NetraCom | ON PROGRESS | 850 |
+formula:
+=TAKE(SORT(A2:F9, 6, -1), 3)
+=TAKE(A2:F9, -2, 2)
+hasil:
+Rumus 1: tiga proyek bernilai terbesar (P-01, P-03, P-06) dengan semua kolom. Rumus 2: dua baris terakhir, dua kolom pertama (P-07 Microcell Jakarta, P-08 FTTH Medan).
+jelas: `SORT` mengurutkan nilai dari besar ke kecil, lalu `TAKE` mengambil 3 baris teratas. Pada rumus kedua, -2 berarti dua baris dari bawah.
+tip: `=TAKE(A2:A1000, -1)` di Table yang terus bertambah memberi data terakhir yang diinput.
+salah: `rows` 0 menghasilkan `#CALC!`. Jika jumlah baris diambil dari cell input, pastikan nilainya tidak kosong.
+real: Top 5 proyek, 10 transaksi terakhir, 3 vendor termurah.
+@@end
+
+@@fx DROP | Excel 2024 / 365
+fungsi: Membuang sejumlah baris atau kolom dari awal atau akhir array. Kebalikan dari `TAKE`.
+syntax: =DROP(array, rows, [columns])
+args:
+array | Range atau hasil rumus sumber
+rows | Jumlah baris yang dibuang. Positif dari atas, negatif dari bawah
+[columns] | Jumlah kolom yang dibuang
+data:
+@cap Data proyek A1:F9 (lihat 7.1)
+| ID | Project | Provinsi | Provider | Status | Nilai |
+| P-01 | FO Backbone Medan | Sumatera Utara | NetraCom | ON PROGRESS | 850 |
+formula:
+=DROP(A1:F9, 1)
+=DROP(A2:F9, 0, 1)
+hasil:
+Rumus 1: data tanpa baris judul (8 baris). Rumus 2: data tanpa kolom ID (mulai dari kolom Project).
+jelas: Rumus pertama membuang baris judul. Rumus kedua tidak membuang baris (0) tetapi membuang 1 kolom dari kiri.
+tip: Gabungkan dengan hasil yang punya baris total di akhir: `=DROP(Laporan, -1)` membuang baris total sebelum data diolah lebih lanjut.
+salah: Membuang lebih banyak baris dari yang tersedia menghasilkan `#CALC!`.
+real: Membuang judul dan baris total dari data export, membuang kolom ID sebelum dicetak.
+@@end
+
+@@fx CHOOSECOLS | Excel 2024 / 365
+fungsi: Mengambil kolom tertentu dari array, dengan urutan sesuai keinginan.
+syntax: =CHOOSECOLS(array, col_num1, [col_num2], ...)
+args:
+array | Range atau hasil rumus sumber
+col_num1 | Nomor kolom pertama yang diambil. Negatif dihitung dari kanan
+[col_num2] | Nomor kolom berikutnya
+data:
+@cap Data proyek A1:F9 (lihat 7.1)
+| ID | Project | Provinsi | Provider | Status | Nilai |
+| P-01 | FO Backbone Medan | Sumatera Utara | NetraCom | ON PROGRESS | 850 |
+formula:
+=CHOOSECOLS(A2:F9, 2, 5)
+=CHOOSECOLS(A2:F9, 5, 2, -1)
+hasil:
+Rumus 1: kolom Project dan Status. Rumus 2: Status, Project, lalu Nilai (kolom terakhir).
+jelas: Nomor kolom dihitung dari kolom pertama array. Urutan argument menentukan urutan kolom hasil, sehingga kolom bisa disusun ulang.
+tip: Paling berguna di belakang `FILTER` untuk laporan ringkas: `=CHOOSECOLS(FILTER(A2:F9, E2:E9="DELAY"), 1, 2, 6)`.
+salah: Nomor kolom melebihi jumlah kolom array menghasilkan `#VALUE!`.
+real: Menyusun laporan dari tabel lebar, memilih kolom yang akan dikirim ke pihak lain.
+@@end
+
+@@fx CHOOSEROWS | Excel 2024 / 365
+fungsi: Mengambil baris tertentu dari array berdasarkan nomor urut.
+syntax: =CHOOSEROWS(array, row_num1, [row_num2], ...)
+args:
+array | Range atau hasil rumus sumber
+row_num1 | Nomor baris pertama. Negatif dihitung dari bawah
+[row_num2] | Nomor baris berikutnya
+data:
+@cap Data proyek A1:F9 (lihat 7.1)
+| ID | Project | Provinsi | Provider | Status | Nilai |
+| P-01 | FO Backbone Medan | Sumatera Utara | NetraCom | ON PROGRESS | 850 |
+formula: =CHOOSEROWS(A2:F9, 1, -1)
+hasil: Baris P-01 (pertama) dan P-08 (terakhir)
+jelas: Angka 1 mengambil baris pertama data, angka -1 mengambil baris terakhir.
+tip: `=CHOOSEROWS(A2:F9, SEQUENCE(4, 1, 1, 2))` mengambil baris ganjil (1, 3, 5, 7). Berguna untuk data export yang punya baris kosong berselang.
+salah: Menganggap nomor baris mengacu pada nomor baris sheet. Nomor 1 adalah baris pertama array (A2 di contoh ini), bukan baris 1 sheet.
+real: Mengambil data pertama dan terakhir periode, sampling data untuk audit.
+@@end
+
+## 7.4 Menggabungkan Range
+
+@@fx VSTACK | Excel 2024 / 365
+fungsi: Menumpuk beberapa range secara vertikal (atas ke bawah) menjadi satu array.
+syntax: =VSTACK(array1, [array2], ...)
+args:
+array1 | Range pertama (paling atas)
+[array2] | Range berikutnya
+data:
+| Region Jawa | Nilai | | Region Sumatera | Nilai |
+| Bekasi | 420 | | Medan Backbone | 850 |
+| Bandung | 610 | | Medan FTTH | 470 |
+| Bogor | 380 | | | |
+formula: =VSTACK(A1:B4, D2:E3)
+hasil:
+| Region Jawa | Nilai |
+|---|---|
+| Bekasi | 420 |
+| Bandung | 610 |
+| Bogor | 380 |
+| Medan Backbone | 850 |
+| Medan FTTH | 470 |
+jelas: Range pertama diambil lengkap dengan judulnya (A1:B4). Range kedua hanya diambil datanya (D2:E3) sehingga tidak ada judul ganda di tengah.
+tip: Menggabungkan sheet bulanan menjadi satu: `=VSTACK(Jan!A2:F100, Feb!A2:F100, Mar!A2:F100)`. Bungkus dengan `FILTER(..., TAKE(...,,1)<>"")` untuk membuang baris kosong.
+salah: Range dengan jumlah kolom berbeda membuat cell kosong terisi `#N/A`. Bungkus dengan `IFNA(VSTACK(...), "")`.
+real: Konsolidasi data dari beberapa sheet atau cabang, menambahkan pilihan "Semua" di atas daftar dropdown.
+@@end
+
+@@fx HSTACK | Excel 2024 / 365
+fungsi: Menyusun beberapa range secara horizontal (kiri ke kanan) menjadi satu array.
+syntax: =HSTACK(array1, [array2], ...)
+args:
+array1 | Range pertama (paling kiri)
+[array2] | Range berikutnya
+data:
+@cap Data proyek A1:F9 (lihat 7.1)
+| ID | Project | Provinsi | Provider | Status | Nilai |
+| P-01 | FO Backbone Medan | Sumatera Utara | NetraCom | ON PROGRESS | 850 |
+formula: =HSTACK(UNIQUE(D2:D9), SUMIFS(F2:F9, D2:D9, UNIQUE(D2:D9)))
+hasil:
+| Provider | Total Nilai |
+|---|---|
+| NetraCom | 1,755 |
+| Nusanet | 1,165 |
+| Selulink | 910 |
+jelas: `UNIQUE` membuat daftar provider. `SUMIFS` menerima daftar itu sebagai kriteria dan menghitung total untuk setiap provider sekaligus. `HSTACK` menempelkan keduanya menjadi tabel dua kolom.
+tip: Tambahkan judul dengan `VSTACK`: `=VSTACK({"Provider","Total"}, HSTACK(...))`. Dalam satu rumus, Anda mendapat tabel rekap lengkap seperti PivotTable yang selalu ter-update.
+salah: Range dengan tinggi berbeda membuat baris yang kurang terisi `#N/A`.
+real: Tabel rekap per kategori, menggabungkan kolom dari tabel berbeda, menyusun laporan tanpa PivotTable.
+@@end
+
+@@fx TOCOL | Excel 2024 / 365
+fungsi: Mengubah range dua dimensi menjadi satu kolom.
+syntax: =TOCOL(array, [ignore], [scan_by_column])
+args:
+array | Range sumber
+[ignore] | 0 = simpan semua, 1 = abaikan kosong, 2 = abaikan error, 3 = abaikan kosong dan error
+[scan_by_column] | FALSE = baca per baris (default), TRUE = baca per kolom
+data:
+| Shift | Petugas 1 | Petugas 2 | Petugas 3 |
+| Pagi | Andi | Budi | |
+| Malam | Citra | | Dedi |
+formula: =TOCOL(B2:D3, 1)
+hasil: Andi, Budi, Citra, Dedi (satu kolom)
+jelas: Excel membaca range baris per baris dan membuang cell kosong karena `ignore` bernilai 1. Hasilnya daftar petugas dalam satu kolom.
+tip: Gabungkan dengan `UNIQUE` dan `SORT` untuk daftar nama unik dari jadwal berbentuk matriks: `=SORT(UNIQUE(TOCOL(B2:D30, 1)))`.
+salah: Lupa mengisi `ignore`, sehingga cell kosong muncul sebagai angka 0 di hasil.
+real: Meratakan jadwal shift, daftar peserta dari tabel per sesi, mengubah matriks menjadi daftar untuk pivot.
+@@end
+
+@@fx TOROW | Excel 2024 / 365
+fungsi: Mengubah range menjadi satu baris.
+syntax: =TOROW(array, [ignore], [scan_by_column])
+args:
+array | Range sumber
+[ignore] | Sama seperti `TOCOL`
+[scan_by_column] | FALSE = baca per baris, TRUE = baca per kolom
+data:
+@cap Kolom Provinsi C2:C9 dari data proyek
+| ID | Project | Provinsi |
+| P-01 | FO Backbone Medan | Sumatera Utara |
+| P-02 | Tower Bekasi | Jawa Barat |
+| P-03 | FTTH Bandung | Jawa Barat |
+| P-04 | BTS Bogor | Jawa Barat |
+| P-05 | ODC Depok | Jawa Barat |
+| P-06 | FO Access Tangerang | Banten |
+| P-07 | Microcell Jakarta | DKI Jakarta |
+| P-08 | FTTH Medan | Sumatera Utara |
+formula: =TOROW(UNIQUE(C2:C9))
+hasil: Sumatera Utara | Jawa Barat | Banten | DKI Jakarta (satu baris, empat kolom)
+jelas: `UNIQUE` menghasilkan daftar provinsi ke bawah, lalu `TOROW` memutarnya menjadi satu baris. Cocok untuk judul kolom tabel rekap.
+tip: Buat tabel silang otomatis: letakkan `=TOROW(UNIQUE(C2:C9))` sebagai judul kolom dan `=UNIQUE(D2:D9)` sebagai judul baris, lalu isi dengan `SUMIFS` yang memakai referensi spill kedua judul tersebut.
+salah: Hasil satu baris yang panjang bisa menabrak data di kanannya. Sediakan ruang kosong yang cukup.
+real: Judul kolom dinamis untuk tabel rekap, daftar dalam satu baris untuk header laporan.
+@@end
+
+@@case Dynamic Project Report
+problem: Manajer proyek ingin laporan yang bisa difilter berdasarkan Provinsi, Provider, dan Status lewat dropdown, dengan pilihan "Semua" untuk setiap filter. Hasil harus langsung berubah saat pilihan diganti, diurutkan dari nilai terbesar, dan menampilkan total nilai proyek yang tampil.
+data:
+@cap Data proyek di A1:F9 (lihat 7.1). Panel filter di H1:I4
+| ID | Project | Provinsi | Provider | Status | Nilai | | Filter | Pilihan |
+| P-01 | FO Backbone Medan | Sumatera Utara | NetraCom | ON PROGRESS | 850 | | Provinsi | Semua |
+| P-02 | Tower Bekasi | Jawa Barat | Nusanet | DELAY | 420 | | Provider | NetraCom |
+| P-03 | FTTH Bandung | Jawa Barat | NetraCom | COMPLETED | 610 | | Status | Semua |
+| P-04 | BTS Bogor | Jawa Barat | Selulink | ON PROGRESS | 380 |
+| P-05 | ODC Depok | Jawa Barat | Nusanet | COMPLETED | 275 |
+| P-06 | FO Access Tangerang | Banten | Selulink | DELAY | 530 |
+| P-07 | Microcell Jakarta | DKI Jakarta | NetraCom | ON PROGRESS | 295 |
+| P-08 | FTTH Medan | Sumatera Utara | Nusanet | DELAY | 470 |
+formula:
+**Langkah 1. Sumber dropdown** di sheet atau kolom bantu (kolom R, S, dan T, di luar area spill report):
+
+```excel
+=VSTACK("Semua", SORT(UNIQUE(C2:C9)))   // R2, daftar provinsi
+=VSTACK("Semua", SORT(UNIQUE(D2:D9)))   // S2, daftar provider
+=VSTACK("Semua", SORT(UNIQUE(E2:E9)))   // T2, daftar status
+```
+
+Pilih I2, buka Data Validation > List, isi Source dengan `=$R$2#`. Ulangi untuk I3 (`=$S$2#`) dan I4 (`=$T$2#`).
+
+**Langkah 2. Report** di K2:
+
+```excel
+=SORT(FILTER(A2:F9,
+   IF(I2="Semua", TRUE, C2:C9=I2) *
+   IF(I3="Semua", TRUE, D2:D9=I3) *
+   IF(I4="Semua", TRUE, E2:E9=I4),
+   "Tidak ada data"), 6, -1)
+```
+
+**Langkah 3. Ringkasan:**
+
+```excel
+=IFERROR(ROWS(FILTER(A2:A9, IF(I2="Semua",TRUE,C2:C9=I2)*IF(I3="Semua",TRUE,D2:D9=I3)*IF(I4="Semua",TRUE,E2:E9=I4))), 0)   // jumlah proyek
+=SUM(IFERROR(TAKE(K2#, , -1), 0))                                                                                              // total nilai
+```
+result:
+**Skenario 1:** Provinsi = Semua, Provider = NetraCom, Status = Semua
+
+| ID | Project | Provinsi | Provider | Status | Nilai |
+|---|---|---|---|---|---|
+| P-01 | FO Backbone Medan | Sumatera Utara | NetraCom | ON PROGRESS | 850 |
+| P-03 | FTTH Bandung | Jawa Barat | NetraCom | COMPLETED | 610 |
+| P-07 | Microcell Jakarta | DKI Jakarta | NetraCom | ON PROGRESS | 295 |
+
+Jumlah proyek 3, total nilai 1,755 juta.
+
+**Skenario 2:** Provinsi = Jawa Barat, Provider = Semua, Status = Semua
+
+| ID | Project | Provinsi | Provider | Status | Nilai |
+|---|---|---|---|---|---|
+| P-03 | FTTH Bandung | Jawa Barat | NetraCom | COMPLETED | 610 |
+| P-02 | Tower Bekasi | Jawa Barat | Nusanet | DELAY | 420 |
+| P-04 | BTS Bogor | Jawa Barat | Selulink | ON PROGRESS | 380 |
+| P-05 | ODC Depok | Jawa Barat | Nusanet | COMPLETED | 275 |
+
+Jumlah proyek 4, total nilai 1,685 juta.
+explain:
+Setiap filter ditulis sebagai `IF(pilihan="Semua", TRUE, kolom=pilihan)`. Jika pengguna memilih "Semua", kondisinya selalu TRUE sehingga tidak menyaring apa pun. Jika memilih nilai tertentu, hanya baris yang cocok yang bernilai TRUE. Ketiga kondisi dikalikan (logika AND), lalu `FILTER` menampilkan baris yang lolos semua syarat, dan `SORT` mengurutkannya berdasarkan kolom 6.
+
+`VSTACK("Semua", ...)` menambahkan pilihan "Semua" di atas daftar unik, sehingga dropdown selalu punya opsi tanpa filter. Karena dropdown mengambil sumber dari referensi spill (`$R$2#`), provinsi atau provider baru otomatis muncul di pilihan.
+
+Total nilai mengambil kolom terakhir hasil report dengan `TAKE(K2#, , -1)`. `IFERROR` di dalamnya memastikan total bernilai 0 saat report menampilkan "Tidak ada data".
+challenge:
+1. Buat daftar tiga proyek DELAY dengan nilai terbesar, hanya kolom Project dan Nilai.
+2. Buat tabel rekap jumlah proyek per status dalam satu rumus.
+answer:
+```excel
+=TAKE(SORT(CHOOSECOLS(FILTER(A2:F9, E2:E9="DELAY"), 2, 6), 2, -1), 3)
+=HSTACK(UNIQUE(E2:E9), COUNTIFS(E2:E9, UNIQUE(E2:E9)))
+```
+Jawaban 1: FO Access Tangerang 530, FTTH Medan 470, Tower Bekasi 420. Setelah `CHOOSECOLS` hanya tersisa dua kolom, jadi urutan memakai kolom ke-2 (Nilai).
+
+Jawaban 2: ON PROGRESS 3, DELAY 3, COMPLETED 2.
+@@end
+
+:::challenge LATIHAN BAB 7
+15 soal latihan BAB ini ada di bagian [Practice Questions](#150-practice-questions).
+:::

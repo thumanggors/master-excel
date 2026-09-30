@@ -1,0 +1,504 @@
+@@chapter 05 | RUMUS TANGGAL & WAKTU
+desc: Umur piutang, masa kerja karyawan, jatuh tempo kontrak, jumlah hari kerja proyek, dan keterlambatan SLA semuanya dihitung dari tanggal. BAB ini membahas cara Excel menyimpan tanggal dan fungsi yang paling sering dipakai untuk menghitungnya.
+goals:
+- Memahami tanggal sebagai angka seri dan waktu sebagai pecahan hari
+- Mengambil dan menyusun komponen tanggal
+- Menghitung selisih hari, bulan, tahun, dan hari kerja
+- Menentukan jatuh tempo dan akhir bulan
+- Membuat monitoring aging dan SLA proyek
+@@end
+
+## 5.1 Cara Excel Menyimpan Tanggal
+
+Excel menyimpan tanggal sebagai angka seri. Tanggal 1 Januari 1900 bernilai 1, dan setiap hari berikutnya bertambah 1. Tanggal 15 Juni 2026 tersimpan sebagai angka 46188. Waktu disimpan sebagai pecahan hari: pukul 12:00 bernilai 0.5 dan pukul 06:00 bernilai 0.25.
+
+| Tampilan | Nilai asli | Keterangan |
+|---|---|---|
+| 15 Jun 2026 | 46188 | Tanggal saja |
+| 12:00 | 0.5 | Setengah hari |
+| 15 Jun 2026 18:00 | 46188.75 | Tanggal dan jam |
+
+Karena tanggal adalah angka, dua tanggal bisa langsung dikurangi untuk mendapatkan selisih hari:
+
+```excel
+=B2-A2    // A2 = 01 Jun 2026, B2 = 15 Jun 2026, hasil 14
+```
+
+:::important
+Jika hasil pengurangan tanggal tampil sebagai tanggal aneh (misalnya 14 Jan 1900), ubah format cell hasil menjadi General atau Number. Excel sering mewarisi format tanggal dari cell sumber.
+:::
+
+:::note TANGGAL ACUAN
+Contoh di BAB ini memakai tanggal acuan **Senin, 15 Juni 2026** untuk `TODAY()`. Daftar libur di contoh hari kerja (17 dan 22 Juni 2026) adalah tanggal contoh, bukan kalender libur resmi.
+:::
+
+## 5.2 Tanggal Hari Ini dan Menyusun Tanggal
+
+@@fx TODAY
+fungsi: Menghasilkan tanggal hari ini sesuai jam komputer. Nilainya diperbarui otomatis setiap kali file dihitung ulang.
+syntax: =TODAY()
+args:
+(tanpa argument) | Tanda kurung tetap wajib ditulis
+data:
+| No Invoice | Tanggal Invoice |
+| INV-0452 | 20 May 2026 |
+formula:
+=TODAY()
+=TODAY()-B2
+hasil: 15 Jun 2026, dan umur invoice 26 hari
+jelas: Dari 20 Mei ke 31 Mei ada 11 hari, ditambah 15 hari di bulan Juni, jadi totalnya 26 hari. Besok, tanpa diubah apa pun, hasilnya menjadi 27.
+tip: Untuk mencatat tanggal yang tidak boleh berubah (misalnya tanggal input), jangan pakai `TODAY()`. Tekan **Ctrl+;** untuk mengetik tanggal hari ini sebagai nilai tetap.
+salah: Memakai `TODAY()` di laporan yang harus dibekukan per tanggal cut-off. Saat laporan dibuka minggu depan, semua angka aging berubah. Simpan tanggal cut-off di satu cell dan rujuk cell itu.
+real: Umur piutang, sisa hari menuju jatuh tempo, penanda dokumen kedaluwarsa.
+@@end
+
+@@fx NOW
+fungsi: Menghasilkan tanggal dan jam saat ini. Diperbarui setiap kali workbook dihitung ulang.
+syntax: =NOW()
+args:
+(tanpa argument) | Tanda kurung tetap wajib ditulis
+data:
+| No Tiket | Waktu Dibuka |
+| TK-7781 | 15 Jun 2026 08:20 |
+formula:
+=NOW()
+=(NOW()-B2)*24
+hasil: 15 Jun 2026 14:35, dan tiket sudah terbuka 6.25 jam
+jelas: Selisih dua waktu dalam satuan hari adalah 0.2604 (6 jam 15 menit). Dikalikan 24 menjadi jam desimal: 6.25 jam.
+tip: Tekan **Ctrl+Shift+;** untuk mengetik jam saat ini sebagai nilai tetap. Gabungkan dengan Ctrl+; untuk timestamp manual.
+salah: Hasil `NOW()-B2` diformat sebagai Number biasa lalu dibaca sebagai jam. Angka 0.26 bukan 0.26 jam, melainkan 0.26 hari. Kalikan 24 untuk jam atau 1440 untuk menit.
+real: Durasi tiket terbuka, waktu tunggu antrean, timestamp laporan ("Data per 15 Jun 2026 14:35").
+@@end
+
+@@fx DATE
+fungsi: Menyusun tanggal dari angka tahun, bulan, dan hari yang terpisah.
+syntax: =DATE(year, month, day)
+args:
+year | Tahun, empat digit
+month | Bulan 1-12. Angka di luar rentang otomatis digeser ke tahun berikutnya atau sebelumnya
+day | Tanggal 1-31. Angka di luar rentang otomatis digeser ke bulan berikutnya atau sebelumnya
+data:
+| Tahun | Bulan | Hari |
+| 2026 | 6 | 15 |
+| 2026 | 13 | 1 |
+| 2026 | 3 | 0 |
+formula: =DATE(A2, B2, C2)
+hasil: 15 Jun 2026, 01 Jan 2027, 28 Feb 2026
+jelas: Baris pertama menghasilkan tanggal normal. Bulan 13 digeser menjadi Januari tahun berikutnya. Hari 0 berarti "satu hari sebelum tanggal 1", yaitu hari terakhir bulan sebelumnya.
+tip: `DATE` adalah cara paling aman menulis tanggal di dalam rumus. `=SUMIFS(C:C, A:A, ">="&DATE(2026,6,1))` tidak bergantung pada format tanggal regional komputer.
+salah: Menulis tanggal sebagai teks di rumus, misalnya `">=01/06/2026"`. Komputer dengan regional US membacanya sebagai 6 Januari. Gunakan `DATE`.
+real: Menyusun tanggal dari data sistem yang memisahkan tahun, bulan, dan hari, membuat batas awal dan akhir periode laporan.
+@@end
+
+## 5.3 Mengambil Komponen Tanggal
+
+@@fx DAY
+fungsi: Mengambil angka tanggal (1-31) dari sebuah tanggal.
+syntax: =DAY(serial_number)
+args:
+serial_number | Tanggal sumber
+data:
+| Karyawan | Tanggal Masuk |
+| Rudi | 10 Aug 2019 |
+| Sari | 23 Feb 2024 |
+formula: =DAY(B2)
+hasil: 10 dan 23
+jelas: `DAY` hanya mengambil bagian tanggal. Bulan dan tahun diabaikan.
+tip: Cek apakah karyawan masuk setelah tanggal 15 (untuk aturan prorata gaji bulan pertama): `=IF(DAY(B2)>15, "Prorata", "Penuh")`.
+salah: Memakai `DAY` pada teks yang terlihat seperti tanggal. Jika tanggal hasil impor tersimpan sebagai teks, hasilnya `#VALUE!`. Konversi dulu (BAB 8).
+real: Aturan prorata gaji, pengelompokan transaksi awal dan akhir bulan, pengingat ulang tahun.
+@@end
+
+@@fx MONTH
+fungsi: Mengambil angka bulan (1-12) dari sebuah tanggal.
+syntax: =MONTH(serial_number)
+args:
+serial_number | Tanggal sumber
+data:
+| No PO | Tanggal PO |
+| PO-101 | 05 Jan 2026 |
+| PO-102 | 17 Apr 2026 |
+| PO-103 | 15 Jun 2026 |
+formula:
+=MONTH(B2)
+="Q"&ROUNDUP(MONTH(B2)/3, 0)
+hasil:
+| No PO | Bulan | Kuartal |
+|---|---|---|
+| PO-101 | 1 | Q1 |
+| PO-102 | 4 | Q2 |
+| PO-103 | 6 | Q2 |
+jelas: `MONTH` mengambil angka bulan. Bulan 4 dibagi 3 menghasilkan 1.33, dibulatkan ke atas menjadi 2, sehingga April masuk Q2.
+tip: Untuk nama bulan, gunakan `=TEXT(B2, "mmmm")` atau versi Indonesia `=TEXT(B2, "[$-421]mmmm")` yang menghasilkan "Juni".
+salah: Rekap per bulan dengan kriteria `MONTH` saja akan mencampur Juni 2025 dan Juni 2026. Selalu sertakan tahun, atau gunakan rentang tanggal dengan `SUMIFS` (BAB 10).
+real: Kolom bantu bulan dan kuartal untuk pivot table, rekap penjualan per bulan, penentuan periode pajak.
+@@end
+
+@@fx YEAR
+fungsi: Mengambil angka tahun dari sebuah tanggal.
+syntax: =YEAR(serial_number)
+args:
+serial_number | Tanggal sumber
+data:
+| Aset | Tanggal Perolehan |
+| Laptop AST-01 | 12 Mar 2022 |
+| Genset AST-02 | 03 Nov 2019 |
+formula: =YEAR(TODAY())-YEAR(B2)
+hasil: 4 dan 7
+jelas: Rumus mengurangkan tahun sekarang (2026) dengan tahun perolehan. Laptop dibeli 2022 sehingga hasilnya 4, genset 2019 menghasilkan 7.
+tip: Cara ini hanya menghitung selisih tahun kalender. Untuk umur yang tepat (sudah genap berapa tahun), gunakan `DATEDIF` dengan unit "Y".
+salah: Genset di atas sebenarnya belum genap 7 tahun pada 15 Jun 2026 (baru genap pada 3 Nov 2026). Jika selisih tahun ini dipakai untuk depresiasi atau masa kerja, hasilnya bisa lebih satu tahun.
+real: Pengelompokan transaksi per tahun, filter data tahun berjalan, label tahun anggaran.
+@@end
+
+## 5.4 Selisih Tanggal
+
+@@fx DAYS | Excel 2013+
+fungsi: Menghitung jumlah hari antara dua tanggal.
+syntax: =DAYS(end_date, start_date)
+args:
+end_date | Tanggal akhir (ditulis lebih dulu)
+start_date | Tanggal awal
+data:
+| Kontrak | Mulai | Selesai |
+| KTR-2026-08 | 01 Mar 2026 | 31 Dec 2026 |
+formula:
+=DAYS(C2, B2)
+=DAYS(C2, B2)+1
+hasil: 305 hari, atau 306 hari jika tanggal mulai ikut dihitung
+jelas: `DAYS` sama dengan `C2-B2`. Hasil 305 adalah jarak antar tanggal. Jika kontrak berlaku sejak hari pertama sampai hari terakhir, tambahkan 1 untuk menghitung hari berlaku.
+tip: `DAYS` bisa membaca tanggal dalam bentuk teks yang valid, sedangkan pengurangan biasa `C2-B2` lebih ringkas untuk tanggal yang sudah berformat benar.
+salah: Urutan argument terbalik (tanggal awal dulu) menghasilkan angka negatif.
+real: Durasi kontrak, lama pengerjaan proyek, masa berlaku garansi.
+@@end
+
+@@fx DATEDIF
+fungsi: Menghitung selisih dua tanggal dalam tahun, bulan, atau hari penuh. Fungsi ini tidak muncul di daftar saran Excel, tetapi tersedia di semua versi.
+syntax: =DATEDIF(start_date, end_date, unit)
+args:
+start_date | Tanggal awal
+end_date | Tanggal akhir, harus lebih besar atau sama dengan start_date
+unit | "Y" tahun penuh, "M" bulan penuh, "D" hari, "YM" sisa bulan setelah tahun penuh, "MD" sisa hari setelah bulan penuh
+data:
+| Karyawan | Tanggal Masuk | Tanggal Acuan |
+| Rudi | 10 Aug 2019 | 15 Jun 2026 |
+formula:
+=DATEDIF(B2, C2, "Y")
+=DATEDIF(B2, C2, "YM")
+=DATEDIF(B2, C2, "MD")
+=DATEDIF(B2,C2,"Y")&" thn "&DATEDIF(B2,C2,"YM")&" bln "&DATEDIF(B2,C2,"MD")&" hari"
+hasil: 6, 10, 5, dan teks "6 thn 10 bln 5 hari"
+jelas: Dari 10 Agu 2019 sampai 10 Agu 2025 sudah genap 6 tahun. Dari 10 Agu 2025 sampai 10 Jun 2026 ada 10 bulan penuh. Sisa dari 10 Jun ke 15 Jun adalah 5 hari.
+tip: Masa kerja dalam bulan untuk perhitungan hak cuti atau prorata: `=DATEDIF(B2, C2, "M")` menghasilkan 82 bulan.
+salah: Unit "MD" dikenal bisa memberi hasil tidak tepat pada kombinasi tanggal tertentu, terutama di akhir bulan. Untuk dokumen resmi, cek ulang hasilnya secara manual atau hitung sisa hari dengan `C2-EDATE(B2, DATEDIF(B2,C2,"M"))`.
+real: Masa kerja karyawan, umur karyawan, umur aset, lama keanggotaan customer.
+@@end
+
+@@fx YEARFRAC
+fungsi: Menghitung selisih dua tanggal sebagai pecahan tahun, misalnya 0.71 tahun. Berguna untuk perhitungan prorata.
+syntax: =YEARFRAC(start_date, end_date, [basis])
+args:
+start_date | Tanggal awal
+end_date | Tanggal akhir
+[basis] | Cara menghitung hari. 0 atau kosong = 30/360 (US), 1 = hari aktual, 2 = aktual/360, 3 = aktual/365, 4 = 30/360 (Eropa)
+data:
+| Keterangan | Nilai |
+| Tanggal Masuk | 01 Oct 2025 |
+| Tanggal Hitung | 15 Jun 2026 |
+| Bonus Tahunan Penuh | 12,000,000 |
+formula:
+=YEARFRAC(B2, B3)
+=ROUND(B4*YEARFRAC(B2, B3), 0)
+hasil: 0.705556 tahun, bonus prorata 8,466,667
+jelas: Dengan basis 30/360, setiap bulan dianggap 30 hari. Oktober 2025 sampai Juni 2026 dihitung 254 hari dari 360, yaitu 0.705556 tahun. Bonus penuh dikali pecahan tersebut lalu dibulatkan.
+tip: Tulis basis secara eksplisit di rumus dan catat di laporan, karena basis berbeda menghasilkan angka berbeda. Ikuti kebijakan perusahaan atau ketentuan kontrak.
+salah: Menganggap `YEARFRAC` otomatis mengikuti aturan prorata perusahaan. Aturan THR, bonus, atau cuti biasanya berbasis bulan penuh. Jika aturannya "per bulan", gunakan `DATEDIF(...,"M")/12`.
+real: Prorata bonus, bunga pinjaman sederhana, alokasi biaya sewa tahunan ke periode tertentu.
+@@end
+
+## 5.5 Jatuh Tempo dan Akhir Bulan
+
+@@fx EDATE
+fungsi: Menghasilkan tanggal beberapa bulan sebelum atau sesudah tanggal awal, dengan tanggal yang sama.
+syntax: =EDATE(start_date, months)
+args:
+start_date | Tanggal awal
+months | Jumlah bulan. Positif ke depan, negatif ke belakang
+data:
+| Kontrak | Mulai | Durasi (bulan) |
+| PKWT-01 | 15 Jan 2026 | 6 |
+| SEWA-07 | 31 Jan 2026 | 1 |
+formula: =EDATE(B2, C2)
+hasil: 15 Jul 2026 dan 28 Feb 2026
+jelas: Enam bulan setelah 15 Januari adalah 15 Juli. Untuk 31 Januari plus satu bulan, Februari 2026 tidak punya tanggal 31, sehingga Excel memakai tanggal terakhir Februari, yaitu 28.
+tip: Untuk tanggal berakhir kontrak (sehari sebelum ulang tanggal mulai), gunakan `=EDATE(B2, C2)-1`. Kontrak mulai 15 Jan 2026 selama 6 bulan berakhir 14 Jul 2026.
+salah: Menambah bulan dengan `+30` atau `+180`. Panjang bulan tidak sama, sehingga tanggal bergeser beberapa hari.
+real: Tanggal akhir kontrak kerja, jadwal evaluasi 3 bulanan, jatuh tempo cicilan bulanan.
+@@end
+
+@@fx EOMONTH
+fungsi: Menghasilkan tanggal terakhir dari bulan tertentu, dihitung dari tanggal awal ditambah sejumlah bulan.
+syntax: =EOMONTH(start_date, months)
+args:
+start_date | Tanggal awal
+months | 0 = akhir bulan yang sama, 1 = akhir bulan depan, -1 = akhir bulan lalu
+data:
+| No Invoice | Tanggal Invoice |
+| INV-0460 | 12 Jun 2026 |
+formula:
+=EOMONTH(B2, 0)
+=EOMONTH(B2, 1)
+=EOMONTH(B2, -1)+1
+hasil: 30 Jun 2026, 31 Jul 2026, 01 Jun 2026
+jelas: Rumus pertama memberi akhir bulan invoice. Rumus kedua memberi akhir bulan berikutnya, cocok untuk syarat bayar "akhir bulan berikutnya". Rumus ketiga mengambil akhir bulan lalu (31 Mei) lalu ditambah 1, sehingga menjadi tanggal 1 bulan ini.
+tip: Jumlah hari dalam bulan: `=DAY(EOMONTH(B2, 0))` menghasilkan 30 untuk Juni.
+salah: Hasil `EOMONTH` tampil sebagai angka seri (46203). Ubah format cell menjadi Date.
+real: Jatuh tempo pembayaran, batas periode tutup buku, awal dan akhir periode laporan bulanan.
+@@end
+
+## 5.6 Hari dan Minggu
+
+@@fx WEEKDAY
+fungsi: Menghasilkan angka urutan hari dalam seminggu dari sebuah tanggal.
+syntax: =WEEKDAY(serial_number, [return_type])
+args:
+serial_number | Tanggal sumber
+[return_type] | 1 atau kosong = Minggu 1 sampai Sabtu 7. 2 = Senin 1 sampai Minggu 7
+data:
+| Tanggal |
+| 13 Jun 2026 |
+| 14 Jun 2026 |
+| 15 Jun 2026 |
+formula:
+=WEEKDAY(A2, 2)
+=IF(WEEKDAY(A2, 2)>5, "Weekend", "Hari Kerja")
+hasil:
+| Tanggal | WEEKDAY | Keterangan |
+|---|---|---|
+| 13 Jun 2026 (Sabtu) | 6 | Weekend |
+| 14 Jun 2026 (Minggu) | 7 | Weekend |
+| 15 Jun 2026 (Senin) | 1 | Hari Kerja |
+jelas: Dengan `return_type` 2, Senin bernilai 1 dan Minggu bernilai 7. Angka di atas 5 berarti Sabtu atau Minggu.
+tip: Nama hari dalam bahasa Indonesia: `=TEXT(A2, "[$-421]dddd")` menghasilkan Sabtu, Minggu, Senin.
+salah: Lupa menulis `return_type`. Default-nya Minggu = 1, sehingga aturan `>5` justru menandai Jumat dan Sabtu sebagai weekend.
+real: Menandai absensi di hari libur, tarif lembur akhir pekan, penjadwalan shift.
+@@end
+
+@@fx WEEKNUM
+fungsi: Menghasilkan nomor minggu dalam setahun dari sebuah tanggal.
+syntax: =WEEKNUM(serial_number, [return_type])
+args:
+serial_number | Tanggal sumber
+[return_type] | 1 atau kosong = minggu dimulai hari Minggu. 2 = minggu dimulai Senin. 21 = sistem ISO 8601
+data:
+| Tanggal |
+| 15 Jun 2026 |
+formula:
+=WEEKNUM(A2)
+="W"&TEXT(WEEKNUM(A2, 21), "00")&"-"&YEAR(A2)
+hasil: 25, dan label W25-2026
+jelas: Dengan sistem default, minggu pertama adalah minggu yang memuat 1 Januari, dan setiap minggu dimulai hari Minggu. 15 Juni 2026 jatuh di minggu ke-25. Pada tahun 2026, sistem ISO juga menghasilkan 25.
+tip: Sepakati satu sistem penomoran minggu dengan tim. Laporan mingguan yang memakai sistem berbeda bisa selisih satu minggu di awal dan akhir tahun. Excel 2013+ juga punya `ISOWEEKNUM(A2)`.
+salah: Membuat label "W25" tanpa tahun. Minggu ke-25 tahun 2025 dan 2026 akan tergabung di pivot table.
+real: Laporan progres mingguan, rekap produksi per minggu, perencanaan kapasitas.
+@@end
+
+## 5.7 Hari Kerja
+
+@@fx WORKDAY
+fungsi: Menghasilkan tanggal setelah sejumlah hari kerja, dengan melewati Sabtu, Minggu, dan daftar hari libur.
+syntax: =WORKDAY(start_date, days, [holidays])
+args:
+start_date | Tanggal mulai (tidak ikut dihitung)
+days | Jumlah hari kerja yang ditambahkan
+[holidays] | Range daftar tanggal libur
+data:
+| Pekerjaan | Mulai | Durasi (hari kerja) | | Libur (contoh) |
+| Instalasi ODP | 15 Jun 2026 | 10 | | 17 Jun 2026 |
+| | | | | 22 Jun 2026 |
+formula:
+=WORKDAY(B2, C2)
+=WORKDAY(B2, C2, $E$2:$E$3)
+hasil: 29 Jun 2026 tanpa daftar libur, 01 Jul 2026 dengan daftar libur
+jelas: Hitungan dimulai dari hari setelah 15 Juni. Tanpa libur, 10 hari kerja jatuh pada Senin 29 Juni. Dengan dua hari libur di tengahnya, target mundur dua hari kerja menjadi Rabu 1 Juli.
+tip: Simpan daftar libur di sheet khusus lalu beri nama range (misalnya `Libur`). Semua rumus hari kerja di workbook cukup memakai `=WORKDAY(B2, C2, Libur)`.
+salah: Menganggap tanggal mulai ikut dihitung sebagai hari pertama. `WORKDAY(Senin, 1)` menghasilkan Selasa. Jika hari mulai dihitung sebagai hari kerja pertama, gunakan `days-1`.
+real: Target selesai pekerjaan, jatuh tempo SLA dalam hari kerja, jadwal pengiriman.
+@@end
+
+@@fx WORKDAY.INTL
+fungsi: Seperti `WORKDAY`, tetapi hari libur mingguan bisa diatur, misalnya kerja enam hari (libur hanya Minggu).
+syntax: =WORKDAY.INTL(start_date, days, [weekend], [holidays])
+args:
+start_date | Tanggal mulai
+days | Jumlah hari kerja
+[weekend] | Kode akhir pekan. 1 = Sabtu-Minggu, 11 = hanya Minggu, 7 = Jumat-Sabtu. Bisa juga teks 7 digit seperti "0000011"
+[holidays] | Range daftar libur
+data:
+| Pekerjaan | Mulai | Durasi (hari kerja) |
+| Tarik Kabel Site A | 15 Jun 2026 | 10 |
+formula: =WORKDAY.INTL(B2, C2, 11)
+hasil: 26 Jun 2026
+jelas: Kode 11 berarti hanya hari Minggu yang libur, jadi Sabtu tetap dihitung hari kerja. Sepuluh hari kerja dari 16 Juni termasuk Sabtu 20 Juni, sehingga target jatuh pada Jumat 26 Juni.
+tip: Format teks 7 digit dimulai dari Senin, angka 1 berarti libur. `"0000001"` = libur Minggu saja, `"0000011"` = libur Sabtu dan Minggu, `"1000001"` = libur Senin dan Minggu.
+salah: Menulis kode teks sebagai angka, misalnya `0000011` tanpa tanda kutip. Excel membacanya sebagai angka 11 yang artinya berbeda. Teks 7 digit wajib di dalam tanda kutip.
+real: Proyek lapangan dengan pola kerja 6 hari, operasional toko, jadwal kerja shift.
+@@end
+
+@@fx NETWORKDAYS
+fungsi: Menghitung jumlah hari kerja di antara dua tanggal, termasuk tanggal awal dan akhir, tanpa Sabtu, Minggu, dan hari libur.
+syntax: =NETWORKDAYS(start_date, end_date, [holidays])
+args:
+start_date | Tanggal awal (ikut dihitung)
+end_date | Tanggal akhir (ikut dihitung)
+[holidays] | Range daftar libur
+data:
+| Periode | Mulai | Selesai | | Libur (contoh) |
+| Juni 2026 | 01 Jun 2026 | 30 Jun 2026 | | 17 Jun 2026 |
+| | | | | 22 Jun 2026 |
+formula: =NETWORKDAYS(B2, C2, $E$2:$E$3)
+hasil: 20 hari kerja
+jelas: Juni 2026 dimulai hari Senin dan punya 22 hari Senin sampai Jumat. Dua tanggal libur jatuh di hari kerja (Rabu dan Senin), sehingga hari kerja efektif menjadi 20.
+tip: Untuk menghitung hari kerja dalam satu bulan dari satu tanggal apa pun: `=NETWORKDAYS(EOMONTH(A2,-1)+1, EOMONTH(A2,0), Libur)`.
+salah: Tanggal libur yang jatuh di hari Sabtu atau Minggu tidak mengurangi hasil, karena hari itu memang sudah tidak dihitung. Jangan heran jika menambah libur di akhir pekan tidak mengubah angka.
+real: Hari kerja efektif per bulan untuk penggajian harian, aging pekerjaan dalam hari kerja, perhitungan SLA.
+@@end
+
+@@fx NETWORKDAYS.INTL
+fungsi: Seperti `NETWORKDAYS`, dengan pengaturan hari libur mingguan yang bisa diubah.
+syntax: =NETWORKDAYS.INTL(start_date, end_date, [weekend], [holidays])
+args:
+start_date | Tanggal awal (ikut dihitung)
+end_date | Tanggal akhir (ikut dihitung)
+[weekend] | Kode atau teks 7 digit akhir pekan, sama seperti `WORKDAY.INTL`
+[holidays] | Range daftar libur
+data:
+| Periode | Mulai | Selesai | | Libur (contoh) |
+| Juni 2026 | 01 Jun 2026 | 30 Jun 2026 | | 17 Jun 2026 |
+| | | | | 22 Jun 2026 |
+formula: =NETWORKDAYS.INTL(B2, C2, "0000001", $E$2:$E$3)
+hasil: 24 hari kerja
+jelas: Dengan pola kerja enam hari, hanya hari Minggu yang libur. Juni 2026 punya 4 hari Minggu (7, 14, 21, 28), jadi ada 26 hari kerja. Dikurangi dua hari libur, hasilnya 24.
+tip: Pakai hasil ini untuk menghitung upah harian: `=NETWORKDAYS.INTL(B2,C2,"0000001",Libur)*Upah_Harian`.
+salah: Memakai `NETWORKDAYS` biasa untuk tim yang bekerja hari Sabtu. Hari kerja terhitung lebih sedikit dan upah harian menjadi kurang bayar.
+real: Hari kerja karyawan lapangan, operasional toko ritel, target produksi pabrik enam hari kerja.
+@@end
+
+## 5.8 Komponen Waktu
+
+Tiga fungsi berikut memakai data absensi yang sama, dengan batas jam masuk pukul 08:00:00.
+
+@@fx HOUR
+fungsi: Mengambil angka jam (0-23) dari sebuah waktu.
+syntax: =HOUR(serial_number)
+args:
+serial_number | Waktu atau tanggal-waktu sumber
+data:
+| Karyawan | Jam Masuk |
+| Rudi | 08:17:45 |
+| Sari | 07:52:10 |
+formula: =HOUR(B2)
+hasil: 8 dan 7
+jelas: Excel mengambil bagian jam saja. Menit dan detik diabaikan.
+tip: Kelompokkan transaksi per jam untuk analisis jam sibuk: buat kolom bantu `=HOUR(B2)`, lalu hitung dengan `COUNTIF`.
+salah: Memakai `HOUR` untuk menghitung durasi lebih dari 24 jam. `HOUR` dari durasi 26 jam menghasilkan 2. Untuk durasi, gunakan `=(Akhir-Awal)*24`.
+real: Analisis jam sibuk layanan, penentuan shift, tarif berbeda per jam.
+@@end
+
+@@fx MINUTE
+fungsi: Mengambil angka menit (0-59) dari sebuah waktu.
+syntax: =MINUTE(serial_number)
+args:
+serial_number | Waktu sumber
+data:
+| Karyawan | Jam Masuk |
+| Rudi | 08:17:45 |
+| Sari | 07:52:10 |
+formula:
+=MINUTE(B2)
+=MAX(0, (B2-TIME(8,0,0))*1440)
+hasil: `MINUTE` menghasilkan 17 dan 52. Keterlambatan: Rudi 17.75 menit, Sari 0
+jelas: `MINUTE` hanya membaca komponen menit dari jam, jadi 52 untuk Sari bukan berarti terlambat. Untuk keterlambatan, selisihkan jam masuk dengan pukul 08:00 (`TIME(8,0,0)`), lalu kalikan 1440 (jumlah menit dalam sehari). `MAX(0, ...)` mengubah hasil negatif (datang lebih awal) menjadi 0.
+tip: `TIME(jam, menit, detik)` adalah cara aman menulis jam di dalam rumus, sama seperti `DATE` untuk tanggal.
+salah: Menghitung terlambat dengan `MINUTE(B2)` saja. Karyawan yang datang 09:05 terbaca terlambat 5 menit, padahal 65 menit.
+real: Keterlambatan absensi, durasi panggilan telepon, catatan waktu respon.
+@@end
+
+@@fx SECOND
+fungsi: Mengambil angka detik (0-59) dari sebuah waktu.
+syntax: =SECOND(serial_number)
+args:
+serial_number | Waktu sumber
+data:
+| Karyawan | Jam Masuk |
+| Rudi | 08:17:45 |
+| Sari | 07:52:10 |
+formula:
+=SECOND(B2)
+=TIME(HOUR(B2), MINUTE(B2), 0)
+hasil: 45 dan 10. Rumus kedua menghasilkan 08:17:00 dan 07:52:00
+jelas: `SECOND` mengambil detik. Rumus kedua menyusun ulang waktu tanpa detik, berguna jika aturan absensi hanya menghitung sampai menit.
+tip: Data mesin absensi sering menyimpan detik. Hilangkan detik sebelum membandingkan dengan jadwal agar 08:00:30 tidak dianggap terlambat, jika memang kebijakannya demikian.
+salah: Waktu yang tersimpan sebagai teks (misalnya dari file CSV) menghasilkan `#VALUE!`. Konversi dengan `=TIMEVALUE(B2)` atau `VALUE`.
+real: Data log mesin, catatan durasi proses, audit timestamp transaksi.
+@@end
+
+@@case Project Aging & SLA Monitoring
+problem: Tim operasional menangani pekerjaan instalasi dengan SLA 25 hari kalender sejak tanggal start. Manajer ingin tahu berapa umur (aging) setiap pekerjaan, mana yang selesai tepat waktu, mana yang terlambat, dan berapa SLA achievement tim. Pekerjaan yang belum selesai harus dihitung aging-nya sampai hari ini.
+data:
+| Project | Start | Target | Actual | Aging | Status | Terlambat | Tgl Acuan | 15 Jun 2026 |
+| P-01 Instalasi ODP Cibubur | 04 May 2026 | | 27 May 2026 | | |
+| P-02 Instalasi ODP Cawang | 11 May 2026 | | 10 Jun 2026 | | |
+| P-03 Instalasi ODP Kalibata | 18 May 2026 | | | | |
+| P-04 Instalasi ODP Pancoran | 01 Jun 2026 | | | | |
+| P-05 Instalasi ODP Tebet | 25 May 2026 | | 12 Jun 2026 | | |
+formula:
+Isi di baris 2, lalu salin ke baris 6. Tanggal acuan di I1 (di file kerja isi dengan `=TODAY()`).
+
+```excel
+=B2+25                                                     // C2  Target = Start + SLA 25 hari
+=IF(D2="", $I$1-B2, D2-B2)                                 // E2  Aging
+=IF(D2<>"", IF(D2<=C2,"MET SLA","MISSED SLA"), IF($I$1>C2,"OVERDUE","OPEN"))   // F2 Status
+=MAX(0, IF(D2="", $I$1, D2)-C2)                            // G2  Hari terlambat
+```
+
+Ringkasan:
+
+```excel
+=AVERAGE(E2:E6)                          // Rata-rata aging
+=COUNTIF(F2:F6, "MET SLA")/COUNT(D2:D6)  // SLA achievement pekerjaan yang sudah selesai
+=COUNTIF(F2:F6, "OVERDUE")               // Pekerjaan terbuka yang lewat target
+```
+result:
+| Project | Start | Target | Actual | Aging | Status | Terlambat |
+|---|---|---|---|---|---|---|
+| P-01 | 04 May 2026 | 29 May 2026 | 27 May 2026 | 23 | MET SLA | 0 |
+| P-02 | 11 May 2026 | 05 Jun 2026 | 10 Jun 2026 | 30 | MISSED SLA | 5 |
+| P-03 | 18 May 2026 | 12 Jun 2026 | | 28 | OVERDUE | 3 |
+| P-04 | 01 Jun 2026 | 26 Jun 2026 | | 14 | OPEN | 0 |
+| P-05 | 25 May 2026 | 19 Jun 2026 | 12 Jun 2026 | 18 | MET SLA | 0 |
+
+| Ringkasan | Hasil |
+|---|---|
+| Rata-rata Aging | 22.6 hari |
+| SLA Achievement (selesai) | 66.7% (2 dari 3) |
+| Pekerjaan Overdue | 1 |
+explain:
+Aging dihitung berbeda untuk pekerjaan yang sudah dan belum selesai. Jika kolom Actual terisi, aging = Actual - Start. Jika masih kosong, aging dihitung sampai tanggal acuan, sehingga pekerjaan terbuka tetap terlihat umurnya.
+
+Status punya dua cabang. Pekerjaan selesai dibandingkan Actual dengan Target (MET atau MISSED SLA). Pekerjaan terbuka dibandingkan tanggal acuan dengan Target (OPEN atau OVERDUE). P-03 belum selesai dan sudah lewat 3 hari dari target, jadi perlu perhatian lebih dulu daripada P-04.
+
+SLA achievement hanya membagi pekerjaan yang sudah selesai (`COUNT(D2:D6)` menghitung tanggal Actual yang terisi, yaitu 3). Pekerjaan terbuka tidak dimasukkan ke pembagi karena hasil akhirnya belum diketahui.
+challenge:
+SLA diubah menjadi 18 hari kerja (Senin-Jumat, tanpa daftar libur). Hitung ulang kolom Target, lalu hitung aging dalam hari kerja dengan `NETWORKDAYS` (start dan tanggal akhir ikut dihitung).
+answer:
+```excel
+=WORKDAY(B2, 18)                                  // Target baru
+=NETWORKDAYS(B2, IF(D2="", $I$1, D2))             // Aging hari kerja
+```
+Aging hari kerja: P-01 = 18, P-02 = 23, P-03 = 21, P-04 = 11, P-05 = 15. Target baru untuk P-01 adalah 28 May 2026 (18 hari kerja setelah Senin 4 Mei), sehingga actual 27 Mei tetap MET SLA.
+@@end
+
+:::challenge LATIHAN BAB 5
+15 soal latihan BAB ini ada di bagian [Practice Questions](#150-practice-questions).
+:::

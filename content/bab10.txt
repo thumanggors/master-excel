@@ -1,0 +1,375 @@
+@@chapter 10 | ADVANCED FORMULA & FORMULA COMBINATION
+desc: Masalah kerja jarang selesai dengan satu fungsi. BAB terakhir ini menggabungkan fungsi dari BAB 1 sampai 9 menjadi rumus yang menjawab pertanyaan bisnis secara langsung, lalu menutupnya dengan dashboard eksekutif mini yang seluruh angkanya dihitung otomatis.
+goals:
+- Menggabungkan fungsi logika, lookup, dan dynamic array
+- Menjumlahkan dan menghitung data berdasarkan rentang tanggal
+- Memakai SUMPRODUCT untuk kriteria AND dan OR sekaligus
+- Membuat rumus panjang lebih mudah dibaca dengan LET
+- Membuat fungsi sendiri dengan LAMBDA
+- Menyusun Mini Executive Project Dashboard
+@@end
+
+## 10.1 Kombinasi Logika
+
+@@fx IF + AND
+fungsi: Menjalankan keputusan hanya jika semua syarat terpenuhi. Pola paling umum untuk aturan bonus, kelayakan, dan approval.
+syntax: =IF(AND(syarat1, syarat2), nilai_jika_ya, nilai_jika_tidak)
+args:
+syarat1, syarat2 | Kondisi yang semuanya harus TRUE
+nilai_jika_ya | Hasil jika semua syarat terpenuhi
+nilai_jika_tidak | Hasil jika ada satu saja yang tidak terpenuhi
+data:
+| Teknisi | Tiket Selesai | Rating | | Min Tiket | 40 |
+| Andi | 45 | 4.7 | | Min Rating | 4.5 |
+| Bella | 52 | 4.3 |
+| Candra | 38 | 4.8 |
+formula: =IF(AND(B2>=$F$1, C2>=$F$2), "Bonus", "-")
+hasil: Andi Bonus, Bella -, Candra -
+jelas: Andi memenuhi kedua batas. Bella menyelesaikan tiket terbanyak tetapi rating-nya di bawah 4.5. Candra punya rating tertinggi tetapi tiketnya kurang dari 40. Batas disimpan di F1 dan F2 sehingga kebijakan bisa diubah tanpa menyentuh rumus.
+tip: Tampilkan alasan gagal supaya hasil lebih informatif: `=IF(AND(B2>=$F$1,C2>=$F$2), "Bonus", IF(B2<$F$1, "Tiket kurang", "Rating kurang"))`.
+salah: Memakai `AND` di luar `IF` lalu membandingkan hasilnya dengan teks, misalnya `=AND(...)="TRUE"`. Hasil `AND` adalah nilai logika, bukan teks.
+real: Kelayakan bonus, syarat pencairan termin, kelulusan uji kompetensi dengan beberapa komponen nilai.
+@@end
+
+@@fx IF + OR
+fungsi: Menjalankan keputusan jika salah satu syarat terpenuhi. Cocok untuk aturan eskalasi dan pengecualian.
+syntax: =IF(OR(syarat1, syarat2), nilai_jika_ya, nilai_jika_tidak)
+args:
+syarat1, syarat2 | Kondisi, cukup satu yang TRUE
+nilai_jika_ya | Hasil jika minimal satu syarat terpenuhi
+nilai_jika_tidak | Hasil jika semua syarat tidak terpenuhi
+data:
+| Invoice | Nominal | Vendor |
+| INV-1 | 65,000,000 | Lama |
+| INV-2 | 12,500,000 | Baru |
+| INV-3 | 8,000,000 | Lama |
+formula: =IF(OR(B2>50000000, C2="Baru"), "Approval Direktur", "Approval Manager")
+hasil: INV-1 Approval Direktur, INV-2 Approval Direktur, INV-3 Approval Manager
+jelas: INV-1 masuk karena nominalnya di atas 50 juta. INV-2 masuk karena vendornya baru, walaupun nominalnya kecil. INV-3 tidak memenuhi satu pun syarat.
+tip: Gabungkan AND dan OR untuk aturan yang lebih rinci: `=IF(OR(B2>50000000, AND(C2="Baru", B2>10000000)), "Direktur", "Manager")`.
+salah: Urutan kurung salah saat menggabungkan AND dan OR, sehingga logikanya berubah. Tulis kondisi di kertas dulu, lalu cocokkan pasangan kurung di formula bar.
+real: Jalur approval, prioritas penanganan tiket, penanda risiko kredit.
+@@end
+
+## 10.2 Kombinasi Lookup dan Array
+
+@@fx IFERROR + XLOOKUP | Excel 2021+
+fungsi: `XLOOKUP` sudah punya argument `if_not_found` untuk data yang tidak ditemukan. `IFERROR` di luar menangkap error lain yang muncul dari perhitungan setelah lookup.
+syntax: =IFERROR(XLOOKUP(nilai, range_cari, range_hasil) * pengali, nilai_jika_error)
+args:
+XLOOKUP(...) | Lookup yang hasilnya dipakai untuk perhitungan
+pengali | Perhitungan lanjutan, misalnya qty
+nilai_jika_error | Nilai pengganti untuk semua jenis error
+data:
+| Kode Order | Qty | | | Kode | Harga |
+| MTR-001 | 100 | | | MTR-001 | 12,500 |
+| MTR-003 | 2 | | | MTR-002 | 2,300 |
+| MTR-009 | 5 | | | MTR-003 | TBA |
+formula: =IFERROR(XLOOKUP(A2, $E$2:$E$4, $F$2:$F$4)*B2, "Cek harga")
+hasil: MTR-001 = 1,250,000. MTR-003 = Cek harga. MTR-009 = Cek harga
+jelas: MTR-001 ditemukan dan harganya angka, jadi 12,500 × 100 = 1,250,000. MTR-003 ditemukan, tetapi harganya masih teks "TBA", sehingga perkalian menghasilkan `#VALUE!`. MTR-009 tidak ditemukan sehingga `XLOOKUP` menghasilkan `#N/A`. `IFERROR` menangkap kedua error tersebut.
+tip: Untuk pesan yang berbeda, pisahkan lookup dan perhitungan ke dua kolom bantu (C dan D yang masih kosong). C2: `=XLOOKUP(A2, $E$2:$E$4, $F$2:$F$4, "Kode tidak ada")`, lalu D2: `=IF(ISNUMBER(C2), C2*B2, C2)`. MTR-009 akan menampilkan "Kode tidak ada" dan MTR-003 menampilkan "TBA", sehingga penyebab masalahnya langsung terlihat.
+salah: Membungkus `XLOOKUP` dengan `IFERROR` hanya untuk menangani data tidak ditemukan. Argument `if_not_found` lebih tepat karena tidak ikut menyembunyikan error lain.
+real: Menghitung nilai PO dari price list, estimasi biaya material, total tagihan dari tarif.
+@@end
+
+@@fx FILTER + SORT | Excel 2021+
+fungsi: Menyaring data lalu langsung mengurutkannya. Pola dasar untuk daftar prioritas otomatis.
+syntax: =SORT(FILTER(array, include), sort_index, sort_order)
+args:
+FILTER(array, include) | Data yang sudah disaring
+sort_index | Nomor kolom acuan urutan
+sort_order | 1 naik, -1 turun
+data:
+| Invoice | Customer | Jatuh Tempo | Nilai | Status | | Tgl Acuan | 15 Jun 2026 |
+| INV-101 | PT Maju | 20 May 2026 | 45,000,000 | Belum |
+| INV-102 | CV Sentosa | 05 Jun 2026 | 12,000,000 | Lunas |
+| INV-103 | PT Karya | 30 May 2026 | 78,500,000 | Belum |
+| INV-104 | PT Abadi | 25 Jun 2026 | 30,000,000 | Belum |
+| INV-105 | CV Jaya | 10 Jun 2026 | 9,750,000 | Belum |
+formula:
+=SORT(FILTER(A2:D6, (E2:E6="Belum")*(C2:C6<$H$1)), 4, -1)
+=SUM((E2:E6="Belum")*(C2:C6<$H$1)*D2:D6)
+hasil:
+| Invoice | Customer | Jatuh Tempo | Nilai |
+|---|---|---|---|
+| INV-103 | PT Karya | 30 May 2026 | 78,500,000 |
+| INV-101 | PT Maju | 20 May 2026 | 45,000,000 |
+| INV-105 | CV Jaya | 10 Jun 2026 | 9,750,000 |
+
+Total piutang lewat jatuh tempo: 133,250,000
+jelas: `FILTER` mengambil invoice yang belum lunas **dan** jatuh temponya sebelum tanggal acuan. INV-102 sudah lunas dan INV-104 belum jatuh tempo, jadi keduanya tidak tampil. `SORT` mengurutkan hasilnya dari nilai terbesar agar tim collection menagih yang paling besar lebih dulu.
+tip: Tambahkan kolom umur piutang langsung di hasil: `=LET(f, SORT(FILTER(A2:D6,(E2:E6="Belum")*(C2:C6<$H$1)),4,-1), HSTACK(f, $H$1-CHOOSECOLS(f,3)))` (Excel 2024/365).
+salah: Tanggal acuan ditulis sebagai teks di rumus, misalnya `C2:C6<"15/06/2026"`. Perbandingan tanggal dengan teks menghasilkan filter yang salah. Simpan tanggal di cell atau pakai `DATE`.
+real: Daftar piutang overdue, daftar proyek terlambat berdasarkan tingkat keterlambatan, stok di bawah minimum yang diurutkan.
+@@end
+
+@@fx UNIQUE + SORT | Excel 2021+
+fungsi: Membuat daftar unik yang langsung terurut. Dipakai untuk label rekap dan sumber dropdown.
+syntax: =SORT(UNIQUE(array))
+args:
+array | Kolom sumber yang berisi duplikat
+data:
+| Tanggal | Customer |
+| 02 Jun 2026 | PT Maju |
+| 03 Jun 2026 | CV Jaya |
+| 05 Jun 2026 | PT Maju |
+| 08 Jun 2026 | PT Abadi |
+| 09 Jun 2026 | CV Jaya |
+| 12 Jun 2026 | PT Karya |
+formula:
+=SORT(UNIQUE(B2:B7))
+=ROWS(UNIQUE(B2:B7))
+hasil: CV Jaya, PT Abadi, PT Karya, PT Maju. Jumlah customer unik: 4
+jelas: `UNIQUE` membuang duplikat (PT Maju dan CV Jaya masing-masing muncul dua kali), lalu `SORT` mengurutkan abjad.
+tip: Rekap transaksi per customer dalam satu rumus: `=LET(c, SORT(UNIQUE(B2:B7)), HSTACK(c, COUNTIF(B2:B7, c)))`. Hasilnya: CV Jaya 2, PT Abadi 1, PT Karya 1, PT Maju 2.
+salah: Menulis `=UNIQUE(SORT(B2:B7))`. Hasil akhirnya sama, tetapi mengurutkan data yang masih berduplikat lebih boros. Biasakan `SORT(UNIQUE())`.
+real: Daftar customer aktif bulan ini, label baris tabel rekap, pilihan dropdown filter.
+@@end
+
+## 10.3 Kombinasi dengan Tanggal
+
+Tiga rumus berikut memakai data transaksi yang sama.
+
+@@fx SUMIFS + DATE
+fungsi: Menjumlahkan data dalam rentang tanggal tertentu, misalnya satu bulan penuh.
+syntax: =SUMIFS(sum_range, date_range, ">="&tgl_awal, date_range, "<"&tgl_akhir_plus_1)
+args:
+sum_range | Kolom nilai
+date_range | Kolom tanggal, dipakai dua kali (batas awal dan batas akhir)
+tgl_awal | Tanggal awal periode, disusun dengan `DATE`
+tgl_akhir_plus_1 | Hari pertama setelah periode berakhir
+data:
+| Tanggal | Region | Nilai |
+| 28 May 2026 | West | 5,000,000 |
+| 02 Jun 2026 | East | 3,200,000 |
+| 11 Jun 2026 | West | 7,800,000 |
+| 15 Jun 2026 | Central | 4,500,000 |
+| 30 Jun 2026 | West | 6,100,000 |
+| 01 Jul 2026 | East | 2,900,000 |
+formula:
+=SUMIFS(C2:C7, A2:A7, ">="&DATE(2026,6,1), A2:A7, "<"&DATE(2026,7,1))
+=SUMIFS(C2:C7, A2:A7, ">="&DATE(2026,6,1), A2:A7, "<"&DATE(2026,7,1), B2:B7, "West")
+hasil: Total Juni 21,600,000. Total Juni region West 13,900,000
+jelas: Rumus pertama menjumlahkan transaksi mulai 1 Juni sampai sebelum 1 Juli: 3,200,000 + 7,800,000 + 4,500,000 + 6,100,000. Transaksi 28 Mei dan 1 Juli tidak ikut. Rumus kedua menambah kriteria region West: 7,800,000 + 6,100,000.
+tip: Simpan bulan laporan di satu cell (misalnya F1 berisi 01 Jun 2026), lalu tulis batas akhir dengan `EDATE`: `=SUMIFS(C2:C7, A2:A7, ">="&F1, A2:A7, "<"&EDATE(F1,1))`. Ganti F1 untuk berpindah bulan.
+salah: Memakai batas akhir `"<="&DATE(2026,6,30)` pada data yang menyimpan jam (misalnya 30 Jun 2026 14:00). Nilai itu lebih besar dari 30 Jun 2026 00:00 sehingga tidak ikut terhitung. Batas `"<"` hari pertama bulan berikutnya selalu aman.
+real: Penjualan per bulan, biaya per periode, total realisasi proyek per kuartal.
+@@end
+
+@@fx COUNTIFS + DATE
+fungsi: Menghitung jumlah data dalam rentang tanggal, misalnya tujuh hari terakhir.
+syntax: =COUNTIFS(date_range, ">="&tgl_awal, date_range, "<="&tgl_akhir, [range_lain, kriteria_lain])
+args:
+date_range | Kolom tanggal
+tgl_awal, tgl_akhir | Batas periode
+[range_lain, kriteria_lain] | Kriteria tambahan
+data:
+| Tanggal Tiket | Status | | Tgl Acuan | 15 Jun 2026 |
+| 08 Jun 2026 | Closed |
+| 09 Jun 2026 | Open |
+| 11 Jun 2026 | Closed |
+| 12 Jun 2026 | Open |
+| 14 Jun 2026 | Open |
+| 15 Jun 2026 | Open |
+formula:
+=COUNTIFS(A2:A7, ">="&$E$1-6, A2:A7, "<="&$E$1)
+=COUNTIFS(A2:A7, ">="&$E$1-6, A2:A7, "<="&$E$1, B2:B7, "Open")
+hasil: 5 tiket dalam 7 hari terakhir, 4 di antaranya masih Open
+jelas: Tujuh hari terakhir dihitung dari 9 Juni (15 - 6) sampai 15 Juni. Tiket 8 Juni berada di luar periode. Dari lima tiket dalam periode, hanya tiket 11 Juni yang sudah Closed.
+tip: Di file kerja, isi E1 dengan `=TODAY()` supaya angka "7 hari terakhir" selalu bergerak mengikuti hari ini.
+salah: Menulis `">=E1-6"` di dalam tanda kutip. Excel membacanya sebagai teks "E1-6", bukan rumus. Operator ditulis di dalam kutip, sedangkan cell dan perhitungannya di luar kutip dengan `&`.
+real: Tiket baru minggu ini, karyawan yang kontraknya habis 30 hari ke depan, invoice yang jatuh tempo bulan ini.
+@@end
+
+@@fx SUMPRODUCT (Kriteria AND + OR)
+fungsi: `SUMPRODUCT` (BAB 2) bisa mengalikan beberapa kondisi TRUE/FALSE dengan kolom nilai. Perkalian kondisi berarti AND, penjumlahan kondisi berarti OR, dan fungsi seperti `MONTH` bisa dipakai langsung pada range.
+syntax: =SUMPRODUCT((kondisi1)*((kondisi2a)+(kondisi2b))*range_nilai)
+args:
+(kondisi1) | Kondisi AND, misalnya bulan = 6
+((kondisi2a)+(kondisi2b)) | Kondisi OR, dibungkus kurung sendiri
+range_nilai | Kolom yang dijumlahkan
+data:
+| Tanggal | Region | Nilai |
+| 28 May 2026 | West | 5,000,000 |
+| 02 Jun 2026 | East | 3,200,000 |
+| 11 Jun 2026 | West | 7,800,000 |
+| 15 Jun 2026 | Central | 4,500,000 |
+| 30 Jun 2026 | West | 6,100,000 |
+| 01 Jul 2026 | East | 2,900,000 |
+formula: =SUMPRODUCT((MONTH(A2:A7)=6)*((B2:B7="West")+(B2:B7="East"))*C2:C7)
+hasil: 17,100,000
+jelas: Kondisi bulan Juni menghasilkan 1 untuk baris 3 sampai 6. Kondisi region West atau East menghasilkan 1 untuk semua baris kecuali baris 5 (Central). Perkalian keduanya hanya bernilai 1 untuk baris 3, 4, dan 6. Nilai di baris tersebut dijumlahkan: 3,200,000 + 7,800,000 + 6,100,000.
+tip: Pakai struktur yang sama untuk menghitung jumlah baris: hilangkan `range_nilai` dan tambahkan `--` jika hanya ada satu kondisi. `=SUMPRODUCT(--(MONTH(A2:A7)=6))` menghasilkan 4.
+salah: Kondisi OR yang tidak dibungkus kurung. `(A)*(B)+(C)` dihitung sebagai `((A)*(B))+(C)`, sehingga baris region East dari bulan apa pun (termasuk 1 Juli) ikut terhitung.
+real: Rekap dengan kombinasi AND-OR, perhitungan per bulan tanpa kolom bantu, rata-rata tertimbang dengan syarat.
+@@end
+
+## 10.4 LET dan LAMBDA
+
+@@fx LET | Excel 2021+
+fungsi: Memberi nama pada hasil perhitungan di dalam rumus. Rumus panjang menjadi lebih mudah dibaca, dan perhitungan yang dipakai berulang hanya dihitung sekali.
+syntax: =LET(name1, value1, [name2, value2, ...], calculation)
+args:
+name1 | Nama variabel, diawali huruf, tanpa spasi
+value1 | Nilai atau perhitungan yang disimpan di nama tersebut
+[name2, value2] | Pasangan nama berikutnya
+calculation | Perhitungan akhir yang memakai nama-nama tersebut
+data:
+| No HP Mentah |
+| +62 813 1122 3344 |
+| 0812-3456-7890 |
+formula: =LET(x, SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(A2,"-","")," ",""),"+",""), IF(LEFT(x,2)="62", "0"&MID(x,3,20), x))
+hasil: 081311223344 dan 081234567890
+jelas: Di BAB 4, pembersihan nomor HP memakai kolom bantu. Dengan `LET`, hasil `SUBSTITUTE` disimpan di variabel `x`, lalu `x` dipakai tiga kali di perhitungan akhir. Tanpa `LET`, rangkaian `SUBSTITUTE` harus ditulis ulang tiga kali.
+tip: Tulis `LET` dalam beberapa baris dengan **Alt+Enter** di formula bar, satu variabel per baris. Rumus panjang jadi terbaca seperti langkah-langkah.
+salah: Memakai nama variabel yang mirip alamat cell, seperti `A1` atau `KM2`. Excel menolak nama tersebut. Gunakan nama deskriptif seperti `hp`, `total`, `target`.
+real: Rumus pembersihan data, perhitungan KPI berlapis, rumus dashboard yang memakai hasil `FILTER` yang sama beberapa kali.
+@@end
+
+@@fx LAMBDA | Excel 2024 / 365
+fungsi: Membuat fungsi sendiri yang bisa dipanggil dengan nama, seperti fungsi bawaan Excel. Didefinisikan sekali lewat Name Manager, lalu dipakai di seluruh workbook.
+syntax: =LAMBDA([parameter1, parameter2, ...], calculation)
+args:
+[parameter] | Nama input fungsi, sampai 253 parameter
+calculation | Perhitungan yang memakai parameter tersebut
+data:
+| Sales | Target | Actual |
+| Andi | 50,000,000 | 45,000,000 |
+| Gita | 0 | 12,000,000 |
+formula:
+=LAMBDA(actual, target, IF(target=0, 0, actual/target))(45000000, 50000000)   // uji langsung di cell
+=ACHIEVE(C2, B2)                                                               // setelah didefinisikan di Name Manager
+hasil: Uji langsung menghasilkan 0.9 (90%). `ACHIEVE` menghasilkan 90% untuk Andi dan 0% untuk Gita
+jelas: Langkah membuat fungsi: buka Formulas > Name Manager > New. Isi Name dengan `ACHIEVE`, lalu isi Refers to dengan `=LAMBDA(actual, target, IF(target=0, 0, actual/target))`. Setelah itu `=ACHIEVE(C2, B2)` bisa dipakai di mana saja dalam workbook. Aturan "target 0 berarti achievement 0" kini tersimpan di satu tempat.
+tip: Gabungkan dengan `LET` untuk fungsi pembersih: buat nama `CLEANHP` berisi `=LAMBDA(hp, LET(x, SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(hp,"-","")," ",""),"+",""), IF(LEFT(x,2)="62","0"&MID(x,3,20),x)))`, lalu cukup tulis `=CLEANHP(A2)`.
+salah: Mengetik `=LAMBDA(...)` di cell tanpa memberi nilai parameter di belakangnya. Excel menghasilkan `#CALC!`. `LAMBDA` harus dipanggil dengan nilai (seperti baris pertama contoh) atau disimpan di Name Manager.
+real: Rumus KPI standar perusahaan, pembersihan data yang dipakai berulang, perhitungan pajak dan komisi dengan aturan baku.
+@@end
+
+@@case Mini Executive Project Dashboard
+problem: Direktur operasional ingin satu halaman dashboard yang menjawab pertanyaan inti setiap minggu: berapa proyek yang berjalan, berapa yang selesai dan terlambat, seberapa jauh realisasi dibanding target, berapa lama rata-rata proyek berjalan, dan berapa persen proyek selesai tepat waktu. Semua angka harus dihitung dari database tanpa input manual.
+data:
+@cap Sheet Data, A1:K9. Tanggal acuan di Data!N1 = 15 Jun 2026 (di file kerja: =TODAY())
+| Project | Provider | Region | PIC | Plan Start | Plan Finish | Actual Start | Actual Finish | Target | Actual | Status |
+| PRJ-A01 | NetraCom | West | Andi | 02 Mar 2026 | 30 Apr 2026 | 04 Mar 2026 | 28 Apr 2026 | 1,000 | 1,000 | COMPLETED |
+| PRJ-A02 | Nusanet | West | Bella | 16 Mar 2026 | 15 May 2026 | 18 Mar 2026 | 22 May 2026 | 800 | 800 | COMPLETED |
+| PRJ-A03 | Selulink | Central | Candra | 06 Apr 2026 | 05 Jun 2026 | 08 Apr 2026 | | 1,200 | 780 | DELAY |
+| PRJ-A04 | NetraCom | Central | Dewi | 04 May 2026 | 31 Jul 2026 | 06 May 2026 | | 1,500 | 600 | ON PROGRESS |
+| PRJ-A05 | Nusanet | East | Andi | 13 Apr 2026 | 12 Jun 2026 | 13 Apr 2026 | 10 Jun 2026 | 600 | 600 | COMPLETED |
+| PRJ-A06 | Selulink | East | Bella | 18 May 2026 | 17 Aug 2026 | 20 May 2026 | | 900 | 270 | ON PROGRESS |
+| PRJ-A07 | NetraCom | West | Andi | 01 Apr 2026 | 29 May 2026 | 03 Apr 2026 | | 700 | 420 | DELAY |
+| PRJ-A08 | Nusanet | Central | Dewi | 01 Jun 2026 | 30 Sep 2026 | 03 Jun 2026 | | 1,100 | 110 | ON PROGRESS |
+formula:
+Definisi yang dipakai dashboard:
+
+| KPI | Definisi |
+|---|---|
+| Aging | Actual Finish - Actual Start untuk proyek selesai, Tanggal Acuan - Actual Start untuk proyek berjalan |
+| SLA % | Proyek COMPLETED dengan Actual Finish ≤ Plan Finish, dibagi jumlah proyek COMPLETED |
+
+**Rumus KPI** (di sheet Dashboard, merujuk sheet Data):
+
+| KPI | Formula |
+|---|---|
+| TOTAL PROJECT | `=COUNTA(Data!A2:A9)` |
+| COMPLETED | `=COUNTIF(Data!K2:K9, "COMPLETED")` |
+| ON PROGRESS | `=COUNTIF(Data!K2:K9, "ON PROGRESS")` |
+| DELAY | `=COUNTIF(Data!K2:K9, "DELAY")` |
+| TOTAL TARGET | `=SUM(Data!I2:I9)` |
+| TOTAL ACTUAL | `=SUM(Data!J2:J9)` |
+| ACHIEVEMENT % | `=IFERROR(SUM(Data!J2:J9)/SUM(Data!I2:I9), 0)` |
+| AVERAGE AGING | `=SUMPRODUCT((Data!H2:H9="")*Data!N1+Data!H2:H9-Data!G2:G9)/COUNT(Data!G2:G9)` |
+| SLA % | `=IFERROR(SUMPRODUCT((Data!K2:K9="COMPLETED")*(Data!H2:H9<=Data!F2:F9))/COUNTIF(Data!K2:K9,"COMPLETED"), 0)` |
+
+Versi `LET` untuk SLA % (Excel 2021+), lebih mudah diaudit:
+
+```excel
+=LET(
+  selesai, Data!K2:K9="COMPLETED",
+  tepat,   Data!H2:H9<=Data!F2:F9,
+  jumlah,  SUM(--selesai),
+  IF(jumlah=0, 0, SUM(selesai*tepat)/jumlah))
+```
+
+**Rekap per region** (Excel 2024/365):
+
+```excel
+=LET(r, SORT(UNIQUE(Data!C2:C9)),
+     t, SUMIFS(Data!I2:I9, Data!C2:C9, r),
+     a, SUMIFS(Data!J2:J9, Data!C2:C9, r),
+     HSTACK(r, COUNTIF(Data!C2:C9, r), t, a, a/t))
+```
+
+**Daftar proyek DELAY** diurutkan dari keterlambatan terbesar:
+
+```excel
+=LET(f, FILTER(Data!A2:F9, Data!K2:K9="DELAY"),
+     SORT(HSTACK(CHOOSECOLS(f, 1, 4, 6), Data!N1-CHOOSECOLS(f, 6)), 4, -1))
+```
+result:
+@@raw
+<div class="dash">
+  <div class="dash-h"><div><div class="dash-k">MINI EXECUTIVE PROJECT DASHBOARD</div><div class="dash-t">Status per 15 Jun 2026</div></div><div class="dash-src">Sumber: sheet Data, 8 proyek</div></div>
+  <div class="kpis">
+    <div class="kpi"><span>TOTAL PROJECT</span><b>8</b></div>
+    <div class="kpi ok"><span>COMPLETED</span><b>3</b></div>
+    <div class="kpi"><span>ON PROGRESS</span><b>3</b></div>
+    <div class="kpi bad"><span>DELAY</span><b>2</b></div>
+    <div class="kpi"><span>TOTAL TARGET</span><b>7,800</b></div>
+    <div class="kpi"><span>TOTAL ACTUAL</span><b>4,580</b></div>
+    <div class="kpi hi"><span>ACHIEVEMENT %</span><b>58.72%</b><i style="--w:58.72%"></i></div>
+    <div class="kpi"><span>AVERAGE AGING</span><b>49.6 <small>hari</small></b></div>
+    <div class="kpi hi"><span>SLA %</span><b>66.67%</b><i style="--w:66.67%"></i></div>
+  </div>
+  <div class="dash-cols">
+    <div><div class="dash-k">ACHIEVEMENT PER REGION</div>
+      <div class="bar"><span>West</span><div><i style="width:88.8%"></i></div><b>88.80%</b></div>
+      <div class="bar"><span>East</span><div><i style="width:58%"></i></div><b>58.00%</b></div>
+      <div class="bar"><span>Central</span><div><i style="width:39.21%"></i></div><b>39.21%</b></div>
+    </div>
+    <div><div class="dash-k">PROYEK DELAY</div>
+      <table class="grid"><thead><tr><th>Project</th><th>PIC</th><th>Plan Finish</th><th class="num">Terlambat</th></tr></thead>
+      <tbody><tr><td>PRJ-A07</td><td>Andi</td><td>29 May 2026</td><td class="num">17 hari</td></tr><tr><td>PRJ-A03</td><td>Candra</td><td>05 Jun 2026</td><td class="num">10 hari</td></tr></tbody></table>
+    </div>
+  </div>
+</div>
+@@end
+
+**Rekap per region:**
+
+| Region | Proyek | Target | Actual | Achievement |
+|---|---|---|---|---|
+| Central | 3 | 3,800 | 1,490 | 39.21% |
+| East | 2 | 1,500 | 870 | 58.00% |
+| West | 3 | 2,500 | 2,220 | 88.80% |
+explain:
+Kartu KPI dasar memakai fungsi dari BAB 1, 2, dan 9. Dua KPI yang lebih rumit memakai `SUMPRODUCT`.
+
+**Average aging.** Untuk setiap proyek, `(Data!H2:H9="")*Data!N1` bernilai tanggal acuan jika Actual Finish kosong, dan 0 jika sudah terisi. Ditambah Actual Finish (cell kosong dihitung 0), hasilnya adalah "tanggal akhir" yang tepat untuk setiap proyek. Dikurangi Actual Start, didapat aging per proyek: 55, 65, 68, 40, 58, 26, 73, dan 12 hari. Totalnya 397 hari, dibagi 8 proyek = 49.6 hari.
+
+**SLA %.** Hanya proyek COMPLETED yang dinilai. PRJ-A01 (selesai 28 Apr, rencana 30 Apr) dan PRJ-A05 (10 Jun, rencana 12 Jun) tepat waktu. PRJ-A02 selesai 22 Mei, lewat 7 hari dari rencana 15 Mei. Hasilnya 2 dari 3 = 66.67%.
+
+Rekap region menunjukkan hal yang tidak terlihat dari achievement total 58.72%: region Central baru mencapai 39.21%, karena dua proyeknya (A04 dan A08) masih di tahap awal dan satu proyek (A03) DELAY. Daftar DELAY mengurutkan PRJ-A07 di atas karena keterlambatannya 17 hari dihitung dari Plan Finish ke tanggal acuan.
+
+Untuk file yang dipakai di Excel 2019 atau lebih lama, semua kartu KPI tetap berfungsi. Rekap region bisa diganti dengan label manual + `SUMIFS`, dan daftar DELAY diganti AutoFilter.
+challenge:
+1. Tambahkan KPI **Delay Rate** (persentase proyek DELAY dari seluruh proyek yang belum selesai).
+2. Tambahkan KPI **Achievement PIC Andi**.
+3. Tambahkan KPI **Proyek Berisiko**: proyek ON PROGRESS yang Plan Finish-nya 60 hari atau kurang dari tanggal acuan dan achievement-nya di bawah 50%.
+answer:
+```excel
+=COUNTIF(Data!K2:K9,"DELAY")/COUNTIF(Data!K2:K9,"<>COMPLETED")        // 2/5 = 40%
+=SUMIF(Data!D2:D9,"Andi",Data!J2:J9)/SUMIF(Data!D2:D9,"Andi",Data!I2:I9)  // 2,020/2,300 = 87.83%
+=SUMPRODUCT((Data!K2:K9="ON PROGRESS")*(Data!F2:F9-Data!N1<=60)*(Data!J2:J9/Data!I2:I9<0.5))   // 1
+```
+Jawaban 1: 5 proyek belum selesai (3 ON PROGRESS dan 2 DELAY), 2 di antaranya DELAY, jadi 40%.
+
+Jawaban 2: Andi memegang PRJ-A01, A05, dan A07 dengan target 1,000 + 600 + 700 = 2,300 dan actual 1,000 + 600 + 420 = 2,020.
+
+Jawaban 3: Hanya PRJ-A04 yang memenuhi. Plan Finish 31 Jul berjarak 46 hari dari 15 Jun, dan achievement-nya 600/1,500 = 40%. PRJ-A06 (sisa 63 hari) dan PRJ-A08 (sisa 107 hari) masih di luar batas 60 hari.
+@@end
+
+:::challenge LATIHAN BAB 10
+15 soal latihan BAB ini ada di bagian [Practice Questions](#150-practice-questions).
+:::

@@ -1,0 +1,457 @@
+@@chapter 04 | RUMUS TEXT & DATA PROCESSING
+desc: Data dari sistem, formulir online, atau hasil copy-paste jarang langsung rapi. Nama berhuruf kapital acak, nomor HP berisi tanda strip, kode customer tidak seragam. Rumus teks membersihkan dan menyusun ulang data seperti ini tanpa diketik ulang satu per satu.
+goals:
+- Mengambil bagian teks dengan LEFT, RIGHT, dan MID
+- Menyeragamkan huruf dan membuang spasi berlebih
+- Mencari dan mengganti karakter di dalam teks
+- Menggabungkan teks dari beberapa kolom
+- Mengubah teks menjadi angka dan angka menjadi teks berformat
+@@end
+
+## 4.1 Mengambil Bagian Teks
+
+Setiap karakter dalam teks punya posisi. Pada kode `JKT-2026-0147`, huruf J di posisi 1, tanda strip pertama di posisi 4, dan angka 0147 di posisi 10 sampai 13. Tiga fungsi berikut memotong teks berdasarkan posisi tersebut.
+
+@@fx LEFT
+fungsi: Mengambil sejumlah karakter dari sisi kiri teks.
+syntax: =LEFT(text, [num_chars])
+args:
+text | Teks sumber
+[num_chars] | Jumlah karakter yang diambil. Default 1
+data:
+| Kode Proyek |
+| JKT-2026-0147 |
+| BDG-2026-0022 |
+| SBY-2025-0310 |
+formula: =LEFT(A2, 3)
+hasil: JKT, BDG, SBY
+jelas: Tiga karakter pertama dari setiap kode adalah kode region. Rumus ini memisahkannya ke kolom sendiri sehingga bisa dipakai untuk rekap per region.
+tip: Jika panjang bagian kiri tidak tetap, gabungkan dengan `FIND`. Contoh mengambil teks sebelum tanda strip pertama: `=LEFT(A2, FIND("-", A2)-1)`.
+salah: Hasil `LEFT` selalu berupa teks. `=LEFT("2026ABC", 4)` menghasilkan teks "2026", bukan angka. Jika ingin dihitung, bungkus dengan `VALUE` atau tambahkan `--` di depannya.
+real: Mengambil kode region dari kode proyek, kode cabang dari nomor invoice, prefix nomor HP.
+@@end
+
+@@fx RIGHT
+fungsi: Mengambil sejumlah karakter dari sisi kanan teks.
+syntax: =RIGHT(text, [num_chars])
+args:
+text | Teks sumber
+[num_chars] | Jumlah karakter yang diambil. Default 1
+data:
+| No Invoice |
+| INV/2026/06/0452 |
+| INV/2026/06/0453 |
+formula: =RIGHT(A2, 4)
+hasil: 0452 dan 0453
+jelas: Empat karakter terakhir adalah nomor urut invoice. Karena hasilnya teks, angka nol di depan tetap terlihat.
+tip: Untuk menyamarkan data sensitif, tampilkan hanya bagian akhirnya: `="**** "&RIGHT(A2, 4)`.
+salah: Spasi tersembunyi di akhir teks ikut terhitung. Jika sel berisi `"INV/2026/06/0452 "`, hasil `RIGHT(A2, 4)` adalah `"452 "`. Bersihkan dulu dengan `TRIM`.
+real: Nomor urut dokumen, empat digit terakhir rekening atau nomor HP, ekstensi nama file.
+@@end
+
+@@fx MID
+fungsi: Mengambil karakter dari tengah teks, mulai dari posisi tertentu sebanyak jumlah tertentu.
+syntax: =MID(text, start_num, num_chars)
+args:
+text | Teks sumber
+start_num | Posisi karakter pertama yang diambil
+num_chars | Jumlah karakter yang diambil
+data:
+| Kode Proyek |
+| JKT-2026-0147 |
+| BDG-2026-0022 |
+| SBY-2025-0310 |
+formula: =MID(A2, 5, 4)
+hasil: 2026, 2026, 2025
+jelas: Tahun dimulai di posisi 5 (setelah `JKT-`) dan panjangnya 4 karakter.
+tip: Jika `num_chars` lebih panjang dari sisa teks, `MID` hanya mengambil sampai akhir tanpa error. `=MID(A2, 10, 100)` aman dipakai untuk mengambil "semua sisa teks dari posisi 10".
+salah: Salah menghitung posisi karena lupa tanda baca. Cara cepat mengecek: `=FIND("-", A2)` menunjukkan posisi strip pertama, yaitu 4.
+real: Mengambil tahun dari kode proyek, tanggal lahir dari nomor identitas yang formatnya baku, kode produk dari SKU.
+@@end
+
+@@fx LEN
+fungsi: Menghitung jumlah karakter dalam teks, termasuk spasi dan tanda baca.
+syntax: =LEN(text)
+args:
+text | Teks yang dihitung panjangnya
+data:
+| No HP |
+| 081234567890 |
+| 08123456 |
+| 0812 3456 7890 |
+formula: =LEN(A2)
+hasil: 12, 8, 14
+jelas: Nomor pertama 12 digit. Nomor kedua hanya 8 digit, kemungkinan salah input. Nomor ketiga terhitung 14 karena dua spasi ikut dihitung.
+tip: Gabungkan dengan `IF` untuk validasi cepat: `=IF(AND(LEN(A2)>=10, LEN(A2)<=13), "OK", "CEK")`.
+salah: Mengira `LEN` menghitung kata. Untuk menghitung jumlah kata, gunakan `=LEN(TRIM(A2))-LEN(SUBSTITUTE(TRIM(A2)," ",""))+1` (lihat `SUBSTITUTE`).
+real: Validasi panjang nomor HP, NIK, atau kode pos. Mengecek deskripsi yang melebihi batas karakter sistem.
+@@end
+
+## 4.2 Huruf Besar, Kecil, dan Spasi
+
+@@fx LOWER
+fungsi: Mengubah semua huruf menjadi huruf kecil.
+syntax: =LOWER(text)
+args:
+text | Teks yang diubah
+data:
+| Email |
+| Budi.Santoso@PTMaju.co.id |
+| SITI.N@YAHOO.CO.ID |
+formula: =LOWER(A2)
+hasil: budi.santoso@ptmaju.co.id dan siti.n@yahoo.co.id
+jelas: Semua huruf kapital diubah menjadi huruf kecil. Alamat email tidak membedakan huruf besar dan kecil, sehingga format huruf kecil memudahkan pencarian duplikat.
+tip: Sebelum mencari duplikat email, seragamkan dulu dengan `=LOWER(TRIM(A2))` di kolom bantu.
+salah: Menimpa data asli langsung. Tulis rumus di kolom baru, lalu salin dan Paste Special > Values setelah hasilnya benar.
+real: Menyeragamkan email, username, dan kode yang disimpan dalam huruf kecil.
+@@end
+
+@@fx UPPER
+fungsi: Mengubah semua huruf menjadi huruf kapital.
+syntax: =UPPER(text)
+args:
+text | Teks yang diubah
+data:
+| Kode Input |
+| jkt-2026-0147 |
+| Bdg-2026-0022 |
+formula: =UPPER(A2)
+hasil: JKT-2026-0147 dan BDG-2026-0022
+jelas: Kode yang diketik dengan huruf campuran diseragamkan menjadi kapital. Angka dan tanda strip tidak berubah.
+tip: Pasang Data Validation dengan rumus `=EXACT(A2, UPPER(A2))` supaya pengguna hanya bisa mengetik kode dalam huruf kapital.
+salah: Memakai `UPPER` untuk nama orang di dokumen resmi. Nama biasanya ditulis dengan `PROPER`.
+real: Kode proyek, kode material, nomor polisi kendaraan, nama kota untuk label.
+@@end
+
+@@fx PROPER
+fungsi: Mengubah huruf pertama setiap kata menjadi kapital dan sisanya huruf kecil.
+syntax: =PROPER(text)
+args:
+text | Teks yang diubah
+data:
+| Nama |
+| BUDI SANTOSO |
+| siti nurhaliza |
+| aNDI wIJAYA |
+formula: =PROPER(A2)
+hasil: Budi Santoso, Siti Nurhaliza, Andi Wijaya
+jelas: `PROPER` memperlakukan setiap kata secara terpisah, lalu membuat huruf pertama kapital.
+tip: Kombinasi paling sering dipakai untuk nama adalah `=PROPER(TRIM(A2))`, sekaligus membuang spasi berlebih.
+salah: Singkatan ikut berubah. `PT ABC` menjadi `Pt Abc`, dan `CV` menjadi `Cv`. Perbaiki dengan `SUBSTITUTE`, misalnya `=SUBSTITUTE(PROPER(A2), "Pt ", "PT ")`.
+real: Merapikan nama karyawan, nama customer, dan nama kota untuk surat atau laporan.
+@@end
+
+@@fx TRIM
+fungsi: Membuang spasi di awal dan akhir teks, serta mengubah spasi ganda di tengah menjadi satu spasi.
+syntax: =TRIM(text)
+args:
+text | Teks yang dibersihkan
+data:
+| Nama Asli (· = spasi) |
+| ··Budi···Santoso· |
+formula:
+=TRIM(A2)
+=LEN(A2)
+=LEN(TRIM(A2))
+hasil:
+"Budi Santoso", panjang berubah dari 17 menjadi 12 karakter
+jelas: Teks asli punya 2 spasi di depan, 3 spasi di antara kata, dan 1 spasi di belakang (2 + 4 + 3 + 7 + 1 = 17 karakter). `TRIM` menyisakan satu spasi di antara kata saja.
+tip: Spasi berlebih adalah penyebab paling umum `VLOOKUP` gagal menemukan data yang jelas-jelas ada. Jalankan `TRIM` di kedua sisi data sebelum lookup.
+salah: `TRIM` tidak membuang non-breaking space (karakter 160) yang sering terbawa dari halaman web. Gunakan `=TRIM(SUBSTITUTE(A2, CHAR(160), " "))`.
+real: Membersihkan nama hasil input formulir, data hasil export sistem, dan data copy-paste dari email.
+@@end
+
+@@fx CLEAN
+fungsi: Membuang karakter tak tercetak (kode ASCII 0-31), seperti line break dan tab, yang sering terbawa dari sistem lain.
+syntax: =CLEAN(text)
+args:
+text | Teks yang dibersihkan
+data:
+| Alamat (↵ = line break di dalam cell) |
+| Jl. Merdeka No. 5↵Jakarta Pusat |
+formula:
+=CLEAN(A2)
+=TRIM(SUBSTITUTE(A2, CHAR(10), " "))
+hasil:
+`CLEAN` menghasilkan "Jl. Merdeka No. 5Jakarta Pusat". Rumus kedua menghasilkan "Jl. Merdeka No. 5 Jakarta Pusat".
+jelas: Line break adalah karakter nomor 10 (`CHAR(10)`). `CLEAN` menghapusnya, sehingga kata "5" dan "Jakarta" menempel. Rumus kedua mengganti line break dengan spasi, lalu `TRIM` merapikan spasinya.
+tip: Kombinasi standar untuk data hasil impor adalah `=TRIM(CLEAN(A2))`. Jika data berisi line break di antara kata, pakai versi `SUBSTITUTE` di atas.
+salah: Mengira data sudah bersih karena tampilannya satu baris. Line break bisa tersembunyi jika Wrap Text tidak aktif. Cek dengan `=LEN(A2)`: panjangnya lebih besar dari jumlah karakter yang terlihat.
+real: Membersihkan alamat dari formulir online, deskripsi produk dari sistem ERP, data hasil scraping.
+@@end
+
+## 4.3 Mencari dan Mengganti
+
+@@fx FIND
+fungsi: Mencari posisi sebuah teks di dalam teks lain. Membedakan huruf besar dan kecil.
+syntax: =FIND(find_text, within_text, [start_num])
+args:
+find_text | Teks yang dicari
+within_text | Teks tempat mencari
+[start_num] | Posisi mulai pencarian. Default 1
+data:
+| Email |
+| budi.santoso@ptmaju.co.id |
+formula:
+=FIND("@", A2)
+=LEFT(A2, FIND("@", A2)-1)
+=MID(A2, FIND("@", A2)+1, 100)
+hasil:
+Posisi @ = 13, username = budi.santoso, domain = ptmaju.co.id
+jelas: `budi.santoso` terdiri dari 12 karakter, jadi @ berada di posisi 13. `LEFT` mengambil 12 karakter sebelum @, dan `MID` mengambil semua karakter setelah @.
+tip: Untuk mencari kemunculan kedua, gunakan hasil pencarian pertama sebagai `start_num`: `=FIND("-", A2, FIND("-", A2)+1)`. Pada `JKT-2026-0147`, hasilnya 9.
+salah: Jika teks tidak ditemukan, `FIND` menghasilkan `#VALUE!`. Tangani dengan `IFERROR` atau cek dulu dengan `ISNUMBER(FIND(...))`.
+real: Memisahkan username dan domain email, memisahkan nama depan dan belakang, mengambil bagian kode yang panjangnya tidak tetap.
+@@end
+
+@@fx SEARCH
+fungsi: Sama seperti `FIND`, tetapi tidak membedakan huruf besar dan kecil, dan mendukung wildcard `*` dan `?`.
+syntax: =SEARCH(find_text, within_text, [start_num])
+args:
+find_text | Teks yang dicari, boleh berisi wildcard
+within_text | Teks tempat mencari
+[start_num] | Posisi mulai pencarian. Default 1
+data:
+| Deskripsi Material |
+| Kabel FO 24 Core |
+| Patch Cord SC-SC 3m |
+| Kabel fo drop 1 core |
+formula:
+=SEARCH("fo", A2)
+=ISNUMBER(SEARCH("fo", A2))
+hasil:
+| Deskripsi | SEARCH | Mengandung "fo"? |
+|---|---|---|
+| Kabel FO 24 Core | 7 | TRUE |
+| Patch Cord SC-SC 3m | #VALUE! | FALSE |
+| Kabel fo drop 1 core | 7 | TRUE |
+jelas: `SEARCH` menemukan "FO" maupun "fo" di posisi 7. Pada baris kedua teks tidak ditemukan sehingga hasilnya error, dan `ISNUMBER` mengubahnya menjadi FALSE. Pola `ISNUMBER(SEARCH(...))` adalah cara standar mengecek "apakah teks mengandung kata tertentu".
+tip: Cari kata utuh dengan menambahkan spasi: `=ISNUMBER(SEARCH(" fo ", " "&A2&" "))`. Tanpa spasi, kata seperti "Informasi" juga dianggap mengandung "fo".
+salah: Memakai `SEARCH` untuk data yang huruf besar-kecilnya penting, misalnya kode yang membedakan "A1" dan "a1". Gunakan `FIND`.
+real: Menandai material kategori tertentu dari deskripsi bebas, mencari keluhan yang menyebut kata kunci, filter nama perusahaan yang mengandung "PT".
+@@end
+
+@@fx SUBSTITUTE
+fungsi: Mengganti teks tertentu dengan teks lain. Bisa mengganti semua kemunculan atau hanya kemunculan ke-n.
+syntax: =SUBSTITUTE(text, old_text, new_text, [instance_num])
+args:
+text | Teks sumber
+old_text | Teks yang ingin diganti
+new_text | Teks pengganti. Tulis `""` untuk menghapus
+[instance_num] | Kemunculan ke berapa yang diganti. Jika kosong, semua diganti
+data:
+| No HP |
+| 0812-3456-7890 |
+| 0813 1122 3344 |
+formula:
+=SUBSTITUTE(A2, "-", "")
+=SUBSTITUTE(SUBSTITUTE(A3, "-", ""), " ", "")
+hasil: 081234567890 dan 081311223344
+jelas: Rumus pertama menghapus semua tanda strip. Rumus kedua menumpuk dua `SUBSTITUTE`: yang dalam menghapus strip, yang luar menghapus spasi. Dengan cara ini, nomor HP dari berbagai format menjadi seragam.
+tip: Menghitung berapa kali sebuah karakter muncul: `=LEN(A2)-LEN(SUBSTITUTE(A2, "-", ""))`. Untuk `0812-3456-7890` hasilnya 2.
+salah: `SUBSTITUTE` membedakan huruf besar dan kecil. `=SUBSTITUTE(A2, "pt", "PT")` tidak mengubah "Pt".
+real: Menghapus tanda baca dari nomor telepon atau NPWP, mengganti istilah lama dengan istilah baru, mengganti titik desimal dengan koma untuk ekspor.
+@@end
+
+@@fx REPLACE
+fungsi: Mengganti teks berdasarkan posisi karakter, bukan berdasarkan isi.
+syntax: =REPLACE(old_text, start_num, num_chars, new_text)
+args:
+old_text | Teks sumber
+start_num | Posisi awal yang diganti
+num_chars | Jumlah karakter yang diganti
+new_text | Teks pengganti
+data:
+| No HP |
+| 081234567890 |
+formula: =REPLACE(A2, 5, 4, "****")
+hasil: 0812****7890
+jelas: Mulai dari karakter ke-5, empat karakter (`3456`) diganti dengan empat bintang. Posisi lain tidak berubah.
+tip: `REPLACE` dengan `num_chars` 0 berarti menyisipkan. `=REPLACE("JKT2026", 4, 0, "-")` menghasilkan `JKT-2026`.
+salah: Tertukar dengan `SUBSTITUTE`. Pakai `REPLACE` jika Anda tahu posisinya, dan `SUBSTITUTE` jika Anda tahu teks yang diganti.
+real: Menyamarkan nomor HP atau rekening di laporan yang dibagikan, menyisipkan pemisah di kode, mengganti prefix kode lama.
+@@end
+
+@@fx EXACT
+fungsi: Membandingkan dua teks secara persis, termasuk huruf besar dan kecil. Hasilnya TRUE atau FALSE.
+syntax: =EXACT(text1, text2)
+args:
+text1 | Teks pertama
+text2 | Teks kedua
+data:
+| Kode Sistem | Kode Input |
+| INV-001 | INV-001 |
+| INV-002 | inv-002 |
+formula:
+=EXACT(A2, B2)
+=A2=B2
+hasil:
+Baris 2: `EXACT` TRUE, operator `=` TRUE. Baris 3: `EXACT` FALSE, operator `=` TRUE.
+jelas: Operator `=` di Excel tidak membedakan huruf besar dan kecil, sehingga `INV-002` dianggap sama dengan `inv-002`. `EXACT` lebih ketat dan menganggap keduanya berbeda.
+tip: Pakai `EXACT` di Data Validation untuk memaksa format tertentu, atau untuk rekonsiliasi kode yang case-sensitive.
+salah: `EXACT` tetap membedakan spasi. `"INV-001 "` dengan spasi di akhir tidak sama dengan `"INV-001"`. Bersihkan dengan `TRIM` sebelum membandingkan.
+real: Rekonsiliasi kode antar sistem, pengecekan password atau token dalam daftar, validasi input kode yang wajib kapital.
+@@end
+
+## 4.4 Menggabungkan Teks
+
+@@fx CONCATENATE
+fungsi: Menggabungkan beberapa teks menjadi satu. Fungsi lama yang masih didukung semua versi Excel.
+syntax: =CONCATENATE(text1, [text2], ...)
+args:
+text1 | Teks atau cell pertama
+[text2] | Teks atau cell berikutnya, sampai 255 item
+data:
+| Nama Depan | Nama Belakang |
+| Budi | Santoso |
+formula:
+=CONCATENATE(A2, " ", B2)
+=A2&" "&B2
+hasil: Budi Santoso
+jelas: Kedua rumus menghasilkan hal yang sama. Spasi `" "` harus ditulis sendiri sebagai argument, karena Excel tidak menambahkan pemisah otomatis.
+tip: Operator `&` lebih ringkas dan paling sering dipakai praktisi. `CONCATENATE` tetap berguna saat file harus kompatibel dengan Excel versi sangat lama.
+salah: `CONCATENATE` tidak menerima range. `=CONCATENATE(A2:C2)` tidak menggabungkan tiga cell. Untuk range, gunakan `CONCAT` atau `TEXTJOIN`.
+real: Menggabungkan nama depan dan belakang, membuat kalimat keterangan otomatis, menyusun kode dari beberapa kolom.
+@@end
+
+@@fx CONCAT | Excel 2019+
+fungsi: Pengganti modern `CONCATENATE` yang juga bisa menggabungkan seluruh isi range.
+syntax: =CONCAT(text1, [text2], ...)
+args:
+text1 | Teks, cell, atau range pertama
+[text2] | Teks, cell, atau range berikutnya
+data:
+| Region | Tahun | No Urut |
+| JKT | 2026 | 147 |
+formula: =CONCAT(A2, "-", B2, "-", TEXT(C2, "0000"))
+hasil: JKT-2026-0147
+jelas: Nomor urut 147 disimpan sebagai angka. `TEXT(C2, "0000")` mengubahnya menjadi teks empat digit dengan nol di depan, lalu `CONCAT` menggabungkan semua bagian dengan tanda strip.
+tip: `=CONCAT(A2:C2)` menghasilkan `JKT2026147`, yaitu isi range digabung tanpa pemisah. Jika perlu pemisah, gunakan `TEXTJOIN`.
+salah: Membuka file di Excel 2016 atau lebih lama. `CONCAT` menjadi `#NAME?`. Untuk kompatibilitas, pakai operator `&`.
+real: Membuat kode proyek otomatis, nomor dokumen, dan ID unik gabungan beberapa kolom.
+@@end
+
+@@fx TEXTJOIN | Excel 2019+
+fungsi: Menggabungkan isi range dengan pemisah tertentu, dan bisa melewati cell kosong.
+syntax: =TEXTJOIN(delimiter, ignore_empty, text1, [text2], ...)
+args:
+delimiter | Pemisah antar teks, misalnya `", "`
+ignore_empty | TRUE untuk melewati cell kosong
+text1 | Teks atau range pertama
+[text2] | Teks atau range berikutnya
+data:
+| Jalan | Kelurahan | Kecamatan | Kota | Kode Pos |
+| Jl. Merdeka No. 5 | | Gambir | Jakarta Pusat | 10110 |
+formula: =TEXTJOIN(", ", TRUE, A2:E2)
+hasil: Jl. Merdeka No. 5, Gambir, Jakarta Pusat, 10110
+jelas: Kolom Kelurahan kosong. Karena `ignore_empty` bernilai TRUE, Excel melewatinya sehingga tidak muncul pemisah ganda `, ,`.
+tip: Kombinasi `TEXTJOIN` dengan `FILTER` (BAB 7) bisa menampilkan daftar dalam satu cell, misalnya semua nama proyek yang DELAY: `=TEXTJOIN(", ", TRUE, FILTER(A2:A8, G2:G8="DELAY"))`.
+salah: Hasil `TEXTJOIN` maksimal 32,767 karakter. Menggabungkan ribuan baris akan menghasilkan `#VALUE!`.
+real: Menyusun alamat lengkap, daftar nama peserta dalam satu cell, daftar kode yang bermasalah untuk dikirim lewat email.
+@@end
+
+## 4.5 Konversi Teks dan Angka
+
+@@fx VALUE
+fungsi: Mengubah teks yang berbentuk angka menjadi angka sungguhan, sehingga bisa dihitung.
+syntax: =VALUE(text)
+args:
+text | Teks yang berisi angka, tanggal, atau waktu
+data:
+| Penjualan (teks dari sistem) |
+| 45000 |
+| 32500 |
+| 51200 |
+formula:
+=SUM(A2:A4)
+=VALUE(A2)                     // di B2, salin ke B4
+=SUM(B2:B4)
+hasil:
+`SUM` pada data asli menghasilkan 0. Setelah dikonversi, `SUM(B2:B4)` menghasilkan 128,700.
+jelas: Data dari sistem tersimpan sebagai teks, sehingga `SUM` mengabaikannya. `VALUE` mengubah setiap teks menjadi angka, lalu total bisa dihitung: 45,000 + 32,500 + 51,200 = 128,700.
+tip: Cara cepat tanpa kolom bantu: pilih kolom, lalu Data > Text to Columns > Finish. Excel mengonversi teks angka menjadi angka di tempat.
+salah: `VALUE` mengikuti pengaturan regional. Di Excel regional Indonesia, teks `"1,5"` dibaca 1.5, sedangkan di regional US teks yang sama dibaca berbeda. Pastikan format sumber data sesuai pengaturan komputer.
+real: Mengonversi angka hasil export CSV, angka dari hasil `LEFT`/`MID`, dan angka yang diketik dengan tanda petik di depan.
+@@end
+
+@@fx TEXT
+fungsi: Mengubah angka atau tanggal menjadi teks dengan format tertentu. Berguna untuk kalimat otomatis dan label.
+syntax: =TEXT(value, format_text)
+args:
+value | Angka atau tanggal yang diformat
+format_text | Kode format dalam tanda kutip, misalnya `"#,##0"` atau `"dd mmm yyyy"`
+data:
+| Keterangan | Nilai |
+| Total Tagihan | 1250000 |
+| Jatuh Tempo | 15 Jun 2026 |
+formula:
+="Total tagihan: Rp"&TEXT(B2, "#,##0")
+="Jatuh tempo "&TEXT(B3, "dd mmm yyyy")
+=TEXT(B3, "[$-421]dddd, dd mmmm yyyy")
+hasil:
+Total tagihan: Rp1,250,000
+Jatuh tempo 15 Jun 2026
+Senin, 15 Juni 2026
+jelas: Tanpa `TEXT`, angka yang digabung dengan teks kehilangan format dan tampil sebagai `1250000`, sedangkan tanggal tampil sebagai angka seri `46188`. Kode `[$-421]` memaksa nama hari dan bulan ditulis dalam bahasa Indonesia, apa pun bahasa Excel Anda.
+tip: Kode format yang sering dipakai: `"0000"` (nol di depan), `"0.0%"` (persen satu desimal), `"dd/mm/yyyy"`, `"mmmm yyyy"` (nama bulan dan tahun), `"hh:mm"` (jam dan menit).
+salah: Memakai `TEXT` di kolom yang masih akan dihitung. Hasilnya teks, sehingga tidak bisa dijumlahkan. Untuk tampilan saja, gunakan Format Cells (Ctrl+1).
+real: Kalimat otomatis di surat tagihan, judul laporan dinamis ("Laporan Juni 2026"), label dashboard, nomor dokumen dengan nol di depan.
+@@end
+
+@@case Membersihkan Database Customer
+problem: Tim marketing menerima database customer dari tiga sumber: formulir online, input manual sales, dan export sistem lama. Nama ditulis dengan huruf acak dan spasi berlebih, nomor HP punya empat format berbeda, email bercampur huruf besar, dan kode customer tidak seragam. Data ini akan diimpor ke CRM yang mewajibkan format baku.
+data:
+@cap Tanda · menandai spasi yang tidak terlihat di cell
+| Nama | No HP | Email | Kota | Kode |
+| ··budi···SANTOSO· | 0812-3456-7890 | Budi.Santoso@Gmail.com | ·jakarta selatan | cst-12 |
+| SITI nurhaliza | +62 813 1122 3344 | SITI.N@YAHOO.CO.ID· | BANDUNG· | CST-7 |
+| andi··wijaya | 62-857-9988-7766 | andi.w@ptmaju.co.id | surabaya | cst-105 |
+formula:
+Buat kolom hasil di sebelah kanan (mulai kolom G), isi di baris 2 lalu salin ke baris 4. Nomor HP dibersihkan dalam dua langkah memakai kolom bantu H.
+
+| Kolom | Isi | Formula |
+|---|---|---|
+| G | Nama | `=PROPER(TRIM(A2))` |
+| H | HP (bantu) | `=SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(B2,"-","")," ",""),"+","")` |
+| I | HP Final | `=IF(LEFT(H2,2)="62", "0"&MID(H2,3,20), H2)` |
+| J | Email | `=LOWER(TRIM(C2))` |
+| K | Kota | `=PROPER(TRIM(D2))` |
+| L | Kode | `="CST-"&TEXT(VALUE(MID(E2,5,10)),"0000")` |
+result:
+**BEFORE → FORMULA → AFTER** untuk customer pertama:
+
+| Field | Before | Formula | After |
+|---|---|---|---|
+| Nama | ··budi···SANTOSO· | `PROPER(TRIM())` | Budi Santoso |
+| No HP | 0812-3456-7890 | `SUBSTITUTE` ×3, lalu cek prefix 62 | 081234567890 |
+| Email | Budi.Santoso@Gmail.com | `LOWER(TRIM())` | budi.santoso@gmail.com |
+| Kota | ·jakarta selatan | `PROPER(TRIM())` | Jakarta Selatan |
+| Kode | cst-12 | `"CST-"&TEXT(VALUE(MID()),"0000")` | CST-0012 |
+
+Hasil akhir seluruh data:
+
+| Nama | No HP | Email | Kota | Kode |
+|---|---|---|---|---|
+| Budi Santoso | 081234567890 | budi.santoso@gmail.com | Jakarta Selatan | CST-0012 |
+| Siti Nurhaliza | 081311223344 | siti.n@yahoo.co.id | Bandung | CST-0007 |
+| Andi Wijaya | 085799887766 | andi.w@ptmaju.co.id | Surabaya | CST-0105 |
+explain:
+Nomor HP butuh dua langkah. Langkah pertama membuang strip, spasi, dan tanda plus, sehingga `+62 813 1122 3344` menjadi `6281311223344`. Langkah kedua mengecek dua digit awal. Jika `62`, digit tersebut diganti `0` dan sisa nomornya diambil dengan `MID` mulai posisi 3.
+
+Kode customer diambil angkanya dengan `MID(E2,5,10)`, karena prefix `cst-` selalu 4 karakter. `VALUE` mengubahnya menjadi angka, lalu `TEXT(...,"0000")` menambahkan nol di depan sampai 4 digit.
+
+Setelah semua kolom hasil benar, salin kolom G sampai L, lalu Paste Special > Values ke sheet baru. Data siap diimpor tanpa rumus di dalamnya.
+challenge:
+1. Buat kolom **Nama Panggilan** yang hanya berisi nama depan dari kolom G.
+2. Buat kolom **HP Tersamar** untuk laporan yang dibagikan, dengan format `0812****7890`.
+answer:
+```excel
+=LEFT(G2, FIND(" ", G2&" ")-1)      // Nama Panggilan: Budi, Siti, Andi
+=REPLACE(I2, 5, 4, "****")          // HP Tersamar: 0812****7890
+```
+Tambahan `G2&" "` di dalam `FIND` mencegah error jika nama hanya satu kata. Tanpa itu, nama seperti "Rudi" tidak punya spasi dan `FIND` menghasilkan `#VALUE!`.
+@@end
+
+:::challenge LATIHAN BAB 4
+15 soal latihan BAB ini ada di bagian [Practice Questions](#150-practice-questions).
+:::

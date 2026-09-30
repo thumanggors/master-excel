@@ -1,0 +1,451 @@
+@@chapter 09 | DATABASE & REPORTING
+desc: Laporan manajemen hampir selalu berupa ringkasan: berapa proyek per status, berapa total per provinsi, berapa achievement per PIC. BAB ini membahas fungsi -IF/-IFS untuk menyusun rekap, teknik kriteria (wildcard, operator, tanggal), dan fungsi database (D-functions) yang memakai range kriteria.
+goals:
+- Menulis kriteria dengan operator, wildcard, dan referensi cell
+- Menghitung jumlah data dengan COUNTIF dan COUNTIFS
+- Menyusun tabel rekap dua arah dengan SUMIFS dan mixed reference
+- Memakai fungsi database DSUM sampai DGET dengan range kriteria
+- Membuat laporan manajemen per status, provinsi, dan PIC
+@@end
+
+## 9.1 Database Proyek
+
+Semua contoh di BAB ini memakai database berikut. Target dan Actual dalam satuan homepass (HP).
+
+@sheet A1
+| Project | Provider | Provinsi | Kab/Kota | PIC | Target | Actual | Status |
+| FTTH-01 | NetraCom | Jawa Barat | Bekasi | Andi | 1,200 | 1,200 | COMPLETED |
+| FTTH-02 | Nusanet | Jawa Barat | Bogor | Bella | 800 | 560 | ON PROGRESS |
+| FTTH-03 | NetraCom | Jawa Barat | Bandung | Andi | 1,500 | 900 | DELAY |
+| FTTH-04 | Selulink | Banten | Tangerang | Candra | 1,000 | 1,000 | COMPLETED |
+| FTTH-05 | Nusanet | Banten | Serang | Bella | 600 | 240 | ON PROGRESS |
+| FTTH-06 | NetraCom | DKI Jakarta | Jakarta Timur | Dewi | 900 | 450 | DELAY |
+| FTTH-07 | Selulink | DKI Jakarta | Jakarta Selatan | Candra | 700 | 700 | COMPLETED |
+| FTTH-08 | NetraCom | Banten | Tangerang Selatan | Dewi | 1,100 | 770 | ON PROGRESS |
+| FTTH-09 | Nusanet | Jawa Barat | Depok | Andi | 500 | 150 | DELAY |
+| FTTH-10 | Selulink | Jawa Barat | Bekasi | Bella | 1,300 | 1,040 | ON PROGRESS |
+
+## 9.2 Cara Menulis Kriteria
+
+Kriteria di `SUMIF`, `COUNTIF`, `AVERAGEIF`, dan versi -IFS ditulis sebagai teks. Tabel ini berlaku untuk semua fungsi tersebut.
+
+| Kebutuhan | Penulisan Kriteria | Contoh |
+|---|---|---|
+| Sama dengan teks | `"DELAY"` | `=COUNTIF(H2:H11, "DELAY")` |
+| Sama dengan isi cell | `K2` | `=COUNTIF(H2:H11, K2)` |
+| Tidak sama dengan | `"<>COMPLETED"` | `=COUNTIF(H2:H11, "<>COMPLETED")` |
+| Lebih besar / kecil | `">=1000"` | `=COUNTIF(G2:G11, ">=1000")` |
+| Operator + cell | `">="&K1` | `=COUNTIF(G2:G11, ">="&K1)` |
+| Operator + tanggal | `">="&DATE(2026,6,1)` | `=COUNTIFS(A:A, ">="&DATE(2026,6,1))` |
+| Diawali teks | `"Jakarta*"` | `=COUNTIF(D2:D11, "Jakarta*")` |
+| Mengandung teks | `"*Tangerang*"` | `=COUNTIF(D2:D11, "*Tangerang*")` |
+| Tepat n karakter | `"FTTH-0?"` | `=COUNTIF(A2:A11, "FTTH-0?")` |
+| Cell tidak kosong | `"<>"` | `=COUNTIF(E2:E11, "<>")` |
+| Cell kosong | `""` | `=COUNTIF(E2:E11, "")` |
+
+:::tip
+Tanda `*` berarti "karakter apa pun, berapa pun jumlahnya", dan `?` berarti "tepat satu karakter apa pun". Untuk mencari tanda bintang atau tanda tanya secara harfiah, tulis `~*` atau `~?`.
+:::
+
+## 9.3 Rekap dengan -IF dan -IFS
+
+@@fx SUMIF (Wildcard & Operator)
+fungsi: `SUMIF` sudah dibahas di BAB 2. Di laporan, kekuatannya ada di kriteria: wildcard untuk kelompok nama yang mirip, dan operator `<>` untuk mengecualikan kategori.
+syntax: =SUMIF(range, criteria, [sum_range])
+args:
+range | Kolom yang diperiksa
+criteria | Kriteria dengan wildcard atau operator
+[sum_range] | Kolom yang dijumlahkan
+data:
+@plain
+| Kab/Kota (D) | Target (F) | Actual (G) | Status (H) |
+|---|---|---|---|
+| Jakarta Timur | 900 | 450 | DELAY |
+| Jakarta Selatan | 700 | 700 | COMPLETED |
+| (8 baris lain, lihat 9.1) | | | |
+formula:
+=SUMIF(D2:D11, "Jakarta*", G2:G11)
+=SUMIF(H2:H11, "<>COMPLETED", F2:F11)
+hasil: 1,150 dan 6,700
+jelas: Rumus pertama menjumlahkan actual semua kota yang namanya diawali "Jakarta": 450 + 700. Rumus kedua menjumlahkan target semua proyek yang statusnya bukan COMPLETED, yaitu target yang masih harus dikejar: 9,600 - 2,900 = 6,700.
+tip: Hitung sisa target (backlog) dengan satu rumus: `=SUMIF(H2:H11,"<>COMPLETED",F2:F11)-SUMIF(H2:H11,"<>COMPLETED",G2:G11)`. Hasilnya 6,700 - 4,110 = 2,590 HP.
+salah: Wildcard hanya bekerja untuk teks. `"1*"` tidak akan mencocokkan angka 1200 yang tersimpan sebagai angka.
+real: Total per kelompok wilayah, total di luar kategori tertentu, total produk dengan awalan kode yang sama.
+@@end
+
+@@fx SUMIFS (Tabel Rekap Dua Arah)
+fungsi: Dengan mixed reference, satu rumus `SUMIFS` bisa mengisi seluruh tabel rekap baris × kolom, misalnya Provider × Status.
+syntax: =SUMIFS(sum_range, criteria_range1, criteria1, criteria_range2, criteria2)
+args:
+sum_range | Kolom Actual, dikunci penuh
+criteria_range1, criteria1 | Kolom Provider dan label baris (kolom dikunci: `$K2`)
+criteria_range2, criteria2 | Kolom Status dan label kolom (baris dikunci: `L$1`)
+data:
+@cap Database di A1:H11 (lihat 9.1). Kerangka tabel rekap di K1:N4
+@sheet K1
+| Provider | COMPLETED | ON PROGRESS | DELAY |
+| NetraCom | | | |
+| Nusanet | | | |
+| Selulink | | | |
+formula: =SUMIFS($G$2:$G$11, $B$2:$B$11, $K2, $H$2:$H$11, L$1)   // di L2, salin ke L2:N4
+hasil:
+| Provider | COMPLETED | ON PROGRESS | DELAY |
+|---|---|---|---|
+| NetraCom | 1,200 | 770 | 1,350 |
+| Nusanet | 0 | 800 | 150 |
+| Selulink | 1,700 | 1,040 | 0 |
+jelas: `$K2` mengunci kolom K, sehingga saat disalin ke kanan provider tetap diambil dari kolom K. `L$1` mengunci baris 1, sehingga saat disalin ke bawah status tetap diambil dari baris judul. Satu rumus mengisi 9 cell. Total seluruh tabel adalah 7,010, sama dengan total actual database.
+tip: Selalu cocokkan grand total tabel rekap dengan total database (`=SUM(G2:G11)`). Jika berbeda, ada data yang status atau providernya tidak tercakup di label, misalnya karena typo.
+salah: Semua range dikunci penuh termasuk kriteria (`$K$2`, `$L$1`). Seluruh tabel akan berisi angka yang sama.
+real: Rekap provider × status, region × bulan, departemen × jenis biaya.
+@@end
+
+@@fx COUNTIF
+fungsi: Menghitung jumlah cell yang memenuhi satu kriteria.
+syntax: =COUNTIF(range, criteria)
+args:
+range | Range yang diperiksa
+criteria | Kriteria yang harus dipenuhi
+data:
+@plain
+| Actual (G) | Status (H) |
+|---|---|
+| 1,200 | COMPLETED |
+| 560 | ON PROGRESS |
+| 900 | DELAY |
+| 1,000 | COMPLETED |
+| 240 | ON PROGRESS |
+| 450 | DELAY |
+| 700 | COMPLETED |
+| 770 | ON PROGRESS |
+| 150 | DELAY |
+| 1,040 | ON PROGRESS |
+formula:
+=COUNTIF(H2:H11, "DELAY")
+=COUNTIF(G2:G11, ">=1000")
+hasil: 3 proyek DELAY, dan 3 proyek dengan actual minimal 1,000
+jelas: Rumus pertama menghitung baris yang statusnya DELAY (FTTH-03, 06, 09). Rumus kedua menghitung actual 1,200, 1,000, dan 1,040.
+tip: `COUNTIF` adalah alat cepat mencari duplikat: `=COUNTIF($A$2:$A$11, A2)>1`. Pembahasannya ada di BAB 8.
+salah: `COUNTIF` tidak membedakan huruf besar dan kecil, jadi "Delay" dan "DELAY" dihitung sama. Spasi tetap diperhitungkan, sehingga "DELAY " dengan spasi di akhir tidak ikut terhitung. Bersihkan data dengan `TRIM` (BAB 8).
+real: Jumlah proyek per status, jumlah karyawan per departemen, jumlah tiket per prioritas.
+@@end
+
+@@fx COUNTIFS
+fungsi: Menghitung jumlah baris yang memenuhi beberapa kriteria sekaligus.
+syntax: =COUNTIFS(criteria_range1, criteria1, [criteria_range2, criteria2], ...)
+args:
+criteria_range1, criteria1 | Pasangan range dan kriteria pertama
+[criteria_range2, criteria2] | Pasangan berikutnya, sampai 127 pasang
+data:
+@plain
+| Provinsi (C) | PIC (E) | Status (H) |
+|---|---|---|
+| Jawa Barat | Andi | COMPLETED |
+| Jawa Barat | Bella | ON PROGRESS |
+| Jawa Barat | Andi | DELAY |
+| Banten | Candra | COMPLETED |
+| Banten | Bella | ON PROGRESS |
+| DKI Jakarta | Dewi | DELAY |
+| DKI Jakarta | Candra | COMPLETED |
+| Banten | Dewi | ON PROGRESS |
+| Jawa Barat | Andi | DELAY |
+| Jawa Barat | Bella | ON PROGRESS |
+formula:
+=COUNTIFS(C2:C11, "Jawa Barat", H2:H11, "DELAY")
+=COUNTIFS(E2:E11, "Andi", H2:H11, "<>COMPLETED")
+hasil: 2 dan 2
+jelas: Proyek DELAY di Jawa Barat adalah FTTH-03 dan FTTH-09. Proyek Andi yang belum selesai juga FTTH-03 dan FTTH-09.
+tip: Menghitung data dalam rentang angka atau tanggal memakai kolom yang sama dua kali: `=COUNTIFS(F2:F11, ">=500", F2:F11, "<1000")` menghitung target 500 sampai di bawah 1,000. Hasilnya 5.
+salah: Menulis kriteria OR di dalam `COUNTIFS`. `COUNTIFS` selalu AND. Untuk "DELAY atau ON PROGRESS", jumlahkan dua rumus: `=COUNTIF(H2:H11,"DELAY")+COUNTIF(H2:H11,"ON PROGRESS")`, atau `=SUM(COUNTIF(H2:H11, {"DELAY","ON PROGRESS"}))`.
+real: Jumlah proyek per provinsi per status, jumlah karyawan per departemen per status kontrak, jumlah tiket per tim per prioritas.
+@@end
+
+@@fx AVERAGEIF (Per PIC)
+fungsi: `AVERAGEIF` (BAB 2) di laporan sering dipakai untuk rata-rata per orang atau per kelompok, dengan kriteria diambil dari cell label.
+syntax: =AVERAGEIF(range, criteria, [average_range])
+args:
+range | Kolom PIC
+criteria | Nama PIC dari cell label
+[average_range] | Kolom yang dirata-ratakan
+data:
+@plain
+| PIC (E) | Actual (G) |
+|---|---|
+| Andi | 1,200 |
+| Andi | 900 |
+| Andi | 150 |
+| (7 baris PIC lain, lihat 9.1) | |
+formula: =AVERAGEIF($E$2:$E$11, "Andi", $G$2:$G$11)
+hasil: 750 HP per proyek
+jelas: Andi memegang tiga proyek dengan actual 1,200, 900, dan 150. Rata-ratanya 2,250 ÷ 3 = 750.
+tip: Untuk membandingkan antar PIC, rata-rata actual saja bisa menyesatkan karena target setiap proyek berbeda. Tampilkan juga achievement: `=SUMIF(E:E,"Andi",G:G)/SUMIF(E:E,"Andi",F:F)`.
+salah: Membagi `SUMIF` dengan `COUNTA` seluruh kolom. Pembaginya harus jumlah proyek milik PIC tersebut (`COUNTIF`), bukan jumlah semua proyek.
+real: Rata-rata produktivitas per teknisi, rata-rata nilai order per sales, rata-rata waktu penyelesaian per tim.
+@@end
+
+@@fx AVERAGEIFS (Multi Kriteria)
+fungsi: `AVERAGEIFS` (BAB 2) untuk rata-rata dengan beberapa kriteria, misalnya per provider di provinsi tertentu.
+syntax: =AVERAGEIFS(average_range, criteria_range1, criteria1, [criteria_range2, criteria2], ...)
+args:
+average_range | Kolom yang dirata-ratakan
+criteria_range1, criteria1 | Kriteria pertama
+[criteria_range2, criteria2] | Kriteria berikutnya
+data:
+@plain
+| Provider (B) | Provinsi (C) | Target (F) |
+|---|---|---|
+| NetraCom | Jawa Barat | 1,200 |
+| NetraCom | Jawa Barat | 1,500 |
+| NetraCom | DKI Jakarta | 900 |
+| NetraCom | Banten | 1,100 |
+| (6 baris provider lain) | | |
+formula: =AVERAGEIFS(F2:F11, B2:B11, "NetraCom", C2:C11, "Jawa Barat")
+hasil: 1,350
+jelas: Proyek NetraCom di Jawa Barat adalah FTTH-01 (1,200) dan FTTH-03 (1,500). Rata-rata target keduanya 1,350.
+tip: Bungkus dengan `IFERROR(..., "-")` di tabel rekap. Kombinasi provider dan provinsi yang tidak punya proyek akan menghasilkan `#DIV/0!`.
+salah: Menyimpulkan performa dari rata-rata dua data saja. Tampilkan jumlah proyek (`COUNTIFS`) di samping rata-rata supaya pembaca tahu basis perhitungannya.
+real: Rata-rata nilai proyek per provider per wilayah, rata-rata gaji per jabatan per lokasi.
+@@end
+
+## 9.4 Fungsi Database (D-Functions)
+
+Fungsi database memakai tiga argument yang sama: `database` (seluruh tabel termasuk judul), `field` (kolom yang dihitung), dan `criteria` (range kriteria dengan judul kolom yang sama persis dengan database).
+
+| Susunan Kriteria | Artinya |
+|---|---|
+| Beberapa kolom dalam satu baris | AND (semua syarat harus terpenuhi) |
+| Beberapa baris | OR (salah satu baris terpenuhi) |
+
+:::important
+Judul di range kriteria harus sama persis dengan judul database, termasuk spasi. "Status" dan "Status " (dengan spasi) dianggap berbeda, dan rumus menghasilkan 0 tanpa pesan error.
+:::
+
+@@fx DSUM
+fungsi: Menjumlahkan satu kolom database untuk baris yang memenuhi range kriteria.
+syntax: =DSUM(database, field, criteria)
+args:
+database | Seluruh tabel termasuk baris judul
+field | Judul kolom yang dijumlahkan (teks) atau nomor kolom
+criteria | Range kriteria berisi judul dan syarat
+data:
+@cap Database di A1:H11 (lihat 9.1). Kriteria AND di J1:K2, kriteria OR di J4:J6
+@sheet J1
+| Provider | Status |
+| NetraCom | DELAY |
+| | |
+| Provinsi | |
+| Banten | |
+| DKI Jakarta | |
+formula:
+=DSUM($A$1:$H$11, "Actual", J1:K2)
+=DSUM($A$1:$H$11, "Actual", J4:J6)
+hasil: 1,350 dan 3,160
+jelas: Kriteria pertama berada di satu baris, artinya Provider NetraCom **dan** Status DELAY: FTTH-03 (900) + FTTH-06 (450). Kriteria kedua berada di dua baris, artinya Provinsi Banten **atau** DKI Jakarta: 2,010 + 1,150.
+tip: Range kriteria bisa dijadikan panel filter untuk laporan. Pengguna cukup mengubah isi cell kriteria, dan semua rumus D-function ikut berubah.
+salah: Range kriteria mencakup baris kosong. Baris kriteria kosong berarti "tanpa syarat", sehingga seluruh database ikut terhitung. Pastikan range J1:K2 tidak diperluas ke J3.
+real: Rekap dengan kriteria yang sering berubah, laporan dengan kombinasi AND dan OR yang sulit ditulis dengan `SUMIFS`.
+@@end
+
+@@fx DAVERAGE
+fungsi: Menghitung rata-rata satu kolom database untuk baris yang memenuhi kriteria.
+syntax: =DAVERAGE(database, field, criteria)
+args:
+database | Seluruh tabel termasuk judul
+field | Kolom yang dirata-ratakan
+criteria | Range kriteria
+data:
+@cap Database di A1:H11 (lihat 9.1)
+@sheet J1
+| Status |
+| ON PROGRESS |
+formula: =DAVERAGE($A$1:$H$11, "Actual", J1:J2)
+hasil: 652.5
+jelas: Ada empat proyek ON PROGRESS dengan actual 560, 240, 770, dan 1,040. Totalnya 2,610 ÷ 4 = 652.5.
+tip: Kriteria bisa berupa rumus perbandingan, misalnya judul `Actual` dengan isi `<500` untuk rata-rata proyek yang actual-nya masih kecil.
+salah: Menulis `field` yang tidak ada di judul database, misalnya "Aktual". Hasilnya `#VALUE!`.
+real: Rata-rata progres proyek per status, rata-rata nilai klaim per kategori.
+@@end
+
+@@fx DCOUNT
+fungsi: Menghitung jumlah cell berisi angka di satu kolom database, untuk baris yang memenuhi kriteria.
+syntax: =DCOUNT(database, [field], criteria)
+args:
+database | Seluruh tabel termasuk judul
+[field] | Kolom angka yang dihitung
+criteria | Range kriteria
+data:
+@cap Database di A1:H11 (lihat 9.1)
+@sheet J1
+| Target |
+| >=1000 |
+formula: =DCOUNT($A$1:$H$11, "Target", J1:J2)
+hasil: 5
+jelas: Proyek dengan target minimal 1,000 adalah FTTH-01, 03, 04, 08, dan 10.
+tip: `DCOUNT` hanya menghitung angka. Jika kolom field berisi teks, hasilnya 0. Untuk kolom teks, pakai `DCOUNTA`.
+salah: Memilih kolom teks seperti "Project" sebagai field `DCOUNT`. Hasilnya selalu 0.
+real: Jumlah transaksi di atas nominal tertentu, jumlah proyek dengan nilai besar per provider.
+@@end
+
+@@fx DCOUNTA
+fungsi: Menghitung jumlah cell tidak kosong di satu kolom database, untuk baris yang memenuhi kriteria.
+syntax: =DCOUNTA(database, field, criteria)
+args:
+database | Seluruh tabel termasuk judul
+field | Kolom yang dihitung
+criteria | Range kriteria
+data:
+@cap Database di A1:H11 (lihat 9.1)
+@sheet J1
+| PIC |
+| Bella |
+formula: =DCOUNTA($A$1:$H$11, "Project", J1:J2)
+hasil: 3
+jelas: Bella memegang tiga proyek: FTTH-02, FTTH-05, dan FTTH-10.
+tip: Kriteria teks di D-function berlaku sebagai "diawali dengan". Kriteria `Bel` juga akan cocok dengan Bella. Untuk pencocokan persis, tulis `="=Bella"` di cell kriteria.
+salah: Menganggap kriteria teks selalu cocok persis. Nama PIC "Andi" juga akan menangkap "Andika" jika ada.
+real: Jumlah proyek per PIC, jumlah dokumen per jenis, jumlah customer per kota.
+@@end
+
+@@fx DMAX
+fungsi: Mengambil nilai terbesar di satu kolom database untuk baris yang memenuhi kriteria.
+syntax: =DMAX(database, field, criteria)
+args:
+database | Seluruh tabel termasuk judul
+field | Kolom yang dicari nilai terbesarnya
+criteria | Range kriteria
+data:
+@cap Database di A1:H11 (lihat 9.1)
+@sheet J1
+| Provinsi |
+| Jawa Barat |
+formula: =DMAX($A$1:$H$11, "Actual", J1:J2)
+hasil: 1,200
+jelas: Actual proyek di Jawa Barat adalah 1,200, 560, 900, 150, dan 1,040. Nilai terbesarnya 1,200 (FTTH-01).
+tip: Di Excel 2019 ke atas, hasil yang sama bisa didapat dengan `=MAXIFS(G2:G11, C2:C11, "Jawa Barat")` tanpa range kriteria.
+salah: Range `database` tidak menyertakan baris judul (mulai A2). Excel tidak bisa mencocokkan judul field dan kriteria, sehingga hasilnya error.
+real: Nilai kontrak terbesar per wilayah, transaksi terbesar per customer.
+@@end
+
+@@fx DMIN
+fungsi: Mengambil nilai terkecil di satu kolom database untuk baris yang memenuhi kriteria.
+syntax: =DMIN(database, field, criteria)
+args:
+database | Seluruh tabel termasuk judul
+field | Kolom yang dicari nilai terkecilnya
+criteria | Range kriteria
+data:
+@cap Database di A1:H11 (lihat 9.1)
+@sheet J1
+| Status |
+| DELAY |
+formula: =DMIN($A$1:$H$11, "Target", J1:J2)
+hasil: 500
+jelas: Target proyek DELAY adalah 1,500, 900, dan 500. Nilai terkecilnya 500 (FTTH-09).
+tip: Padanan modernnya `=MINIFS(F2:F11, H2:H11, "DELAY")` (Excel 2019+).
+salah: Kolom field berisi cell kosong atau teks. Nilai tersebut diabaikan, sehingga hasil bisa terlihat lebih besar dari yang diharapkan jika ada data yang belum diisi.
+real: Harga penawaran terendah per kategori, progres terendah per status.
+@@end
+
+@@fx DGET
+fungsi: Mengambil satu nilai dari database untuk satu baris yang memenuhi kriteria. Jika ada lebih dari satu baris yang cocok, hasilnya error.
+syntax: =DGET(database, field, criteria)
+args:
+database | Seluruh tabel termasuk judul
+field | Kolom yang diambil
+criteria | Range kriteria yang harus menghasilkan tepat satu baris
+data:
+@cap Database di A1:H11 (lihat 9.1)
+@sheet J1
+| Project |
+| FTTH-06 |
+formula: =DGET($A$1:$H$11, "PIC", J1:J2)
+hasil: Dewi
+jelas: Hanya satu baris yang Project-nya FTTH-06, sehingga `DGET` mengambil isi kolom PIC di baris tersebut.
+tip: `DGET` berguna sebagai pemeriksa keunikan. Jika hasilnya `#NUM!`, berarti ada lebih dari satu baris yang cocok, dan data perlu dicek duplikatnya.
+salah: Memakai `DGET` dengan kriteria yang cocok ke beberapa baris, misalnya Status DELAY. Hasilnya `#NUM!`. Jika tidak ada yang cocok, hasilnya `#VALUE!`.
+real: Mengambil detail satu record dengan beberapa kriteria sekaligus, pengecekan keunikan kombinasi data.
+@@end
+
+@@case Management Reporting
+problem: Setiap Senin, project controller harus mengirim laporan ringkas ke manajemen: jumlah proyek per status, total target dan actual, achievement keseluruhan, serta rekap per provinsi. Laporan harus diperbarui otomatis setiap kali database diperbarui.
+data:
+@cap Database di A1:H11 (lengkap di 9.1)
+| Project | Provider | Provinsi | Kab/Kota | PIC | Target | Actual | Status |
+| FTTH-01 | NetraCom | Jawa Barat | Bekasi | Andi | 1,200 | 1,200 | COMPLETED |
+| FTTH-02 | Nusanet | Jawa Barat | Bogor | Bella | 800 | 560 | ON PROGRESS |
+| FTTH-03 | NetraCom | Jawa Barat | Bandung | Andi | 1,500 | 900 | DELAY |
+| FTTH-04 | Selulink | Banten | Tangerang | Candra | 1,000 | 1,000 | COMPLETED |
+| FTTH-05 | Nusanet | Banten | Serang | Bella | 600 | 240 | ON PROGRESS |
+| FTTH-06 | NetraCom | DKI Jakarta | Jakarta Timur | Dewi | 900 | 450 | DELAY |
+| FTTH-07 | Selulink | DKI Jakarta | Jakarta Selatan | Candra | 700 | 700 | COMPLETED |
+| FTTH-08 | NetraCom | Banten | Tangerang Selatan | Dewi | 1,100 | 770 | ON PROGRESS |
+| FTTH-09 | Nusanet | Jawa Barat | Depok | Andi | 500 | 150 | DELAY |
+| FTTH-10 | Selulink | Jawa Barat | Bekasi | Bella | 1,300 | 1,040 | ON PROGRESS |
+formula:
+**Bagian 1. Ringkasan utama**
+
+| Output | Formula |
+|---|---|
+| Total Project | `=COUNTA(A2:A11)` |
+| Completed | `=COUNTIF(H2:H11, "COMPLETED")` |
+| On Progress | `=COUNTIF(H2:H11, "ON PROGRESS")` |
+| Delay | `=COUNTIF(H2:H11, "DELAY")` |
+| Total Target | `=SUM(F2:F11)` |
+| Total Actual | `=SUM(G2:G11)` |
+| Achievement % | `=IFERROR(SUM(G2:G11)/SUM(F2:F11), 0)` |
+
+**Bagian 2. Rekap per provinsi.** Label provinsi di K2:K4, lalu isi baris 2 dan salin ke bawah:
+
+```excel
+=COUNTIF($C$2:$C$11, K2)                    // L: jumlah proyek
+=COUNTIFS($C$2:$C$11, K2, $H$2:$H$11, "DELAY")  // M: jumlah delay
+=SUMIF($C$2:$C$11, K2, $F$2:$F$11)          // N: target
+=SUMIF($C$2:$C$11, K2, $G$2:$G$11)          // O: actual
+=IFERROR(O2/N2, 0)                           // P: achievement
+```
+result:
+| Ringkasan | Hasil |
+|---|---|
+| Total Project | 10 |
+| Completed | 3 |
+| On Progress | 4 |
+| Delay | 3 |
+| Total Target | 9,600 |
+| Total Actual | 7,010 |
+| Achievement % | 73.02% |
+
+| Provinsi | Proyek | Delay | Target | Actual | Achievement |
+|---|---|---|---|---|---|
+| Jawa Barat | 5 | 2 | 5,300 | 3,850 | 72.64% |
+| Banten | 3 | 0 | 2,700 | 2,010 | 74.44% |
+| DKI Jakarta | 2 | 1 | 1,600 | 1,150 | 71.88% |
+| **Total** | **10** | **3** | **9,600** | **7,010** | **73.02%** |
+explain:
+Ringkasan utama memakai `COUNTIF` untuk jumlah per status dan `SUM` untuk total. Achievement dihitung dari total actual dibagi total target, lalu dibungkus `IFERROR` agar tidak muncul `#DIV/0!` saat database masih kosong di awal periode.
+
+Rekap per provinsi memakai label di kolom K sebagai kriteria, sehingga menambah provinsi baru cukup dengan menambah label dan menyalin rumus. Baris Total pada tabel rekap harus sama dengan ringkasan utama. Kesamaan ini menjadi pengecekan cepat bahwa tidak ada provinsi yang terlewat atau salah ketik di database.
+
+Jawa Barat punya proyek terbanyak dan dua proyek DELAY, walaupun achievement-nya hampir sama dengan provinsi lain. Informasi seperti ini lebih cepat terlihat di tabel rekap daripada di database mentah.
+challenge:
+Buat rekap per PIC berisi jumlah proyek, target, actual, dan achievement. PIC mana yang achievement-nya paling rendah?
+answer:
+```excel
+=COUNTIF($E$2:$E$11, K8)                  // L8: jumlah proyek, label PIC di K8:K11
+=SUMIF($E$2:$E$11, K8, $F$2:$F$11)        // M8: target
+=SUMIF($E$2:$E$11, K8, $G$2:$G$11)        // N8: actual
+=IFERROR(N8/M8, 0)                         // O8: achievement
+```
+
+| PIC | Proyek | Target | Actual | Achievement |
+|---|---|---|---|---|
+| Andi | 3 | 3,200 | 2,250 | 70.31% |
+| Bella | 3 | 2,700 | 1,840 | 68.15% |
+| Candra | 2 | 1,700 | 1,700 | 100.00% |
+| Dewi | 2 | 2,000 | 1,220 | 61.00% |
+
+Achievement terendah adalah Dewi (61.00%). Candra menyelesaikan semua targetnya.
+@@end
+
+:::challenge LATIHAN BAB 9
+15 soal latihan BAB ini ada di bagian [Practice Questions](#150-practice-questions).
+:::

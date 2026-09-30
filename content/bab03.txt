@@ -1,0 +1,338 @@
+@@chapter 03 | RUMUS LOGIKA
+desc: Rumus logika membuat Excel bisa mengambil keputusan: lulus atau remedial, dapat bonus atau tidak, proyek masih aman atau sudah terlambat. BAB ini juga membahas cara menangani error agar laporan tetap bersih.
+goals:
+- Menulis kondisi dengan IF, IFS, dan SWITCH
+- Menggabungkan beberapa syarat dengan AND, OR, NOT, dan XOR
+- Menyusun Nested IF yang rapi dan mudah dibaca
+- Menangani error dengan IFERROR dan IFNA
+- Membuat status proyek otomatis
+@@end
+
+## 3.1 Keputusan Dasar
+
+Semua rumus logika bertumpu pada hasil `TRUE` atau `FALSE` dari operator perbandingan (BAB 1.2). `IF` lalu memilih nilai mana yang ditampilkan berdasarkan hasil itu.
+
+@@fx IF
+fungsi: Menguji satu kondisi. Jika kondisi benar, tampilkan nilai pertama. Jika salah, tampilkan nilai kedua.
+syntax: =IF(logical_test, value_if_true, [value_if_false])
+args:
+logical_test | Kondisi yang diuji, misalnya `B2>=75`
+value_if_true | Nilai atau rumus jika kondisi benar
+[value_if_false] | Nilai atau rumus jika kondisi salah. Jika dikosongkan, hasilnya FALSE
+data:
+| Peserta | Nilai |
+| Andi | 82 |
+| Bella | 68 |
+| Citra | 75 |
+formula: =IF(B2>=75, "LULUS", "REMEDIAL")   // di C2, salin ke C4
+hasil:
+| Peserta | Hasil |
+|---|---|
+| Andi | LULUS |
+| Bella | REMEDIAL |
+| Citra | LULUS |
+jelas: Excel memeriksa apakah nilai minimal 75. Andi (82) dan Citra (75) memenuhi syarat karena operatornya `>=`. Bella (68) tidak memenuhi, sehingga mendapat REMEDIAL.
+tip: Simpan batas nilai di cell terpisah, misalnya `F1` berisi 75, lalu tulis `=IF(B2>=$F$1, "LULUS", "REMEDIAL")`. Jika standar kelulusan berubah, cukup ganti satu cell.
+salah: Teks di dalam rumus wajib diapit tanda kutip dua (`"LULUS"`). Tanpa kutip, Excel menganggapnya nama range dan menghasilkan `#NAME?`.
+real: Status lunas atau belum, kelayakan reimburse, penanda stok di bawah minimum.
+@@end
+
+@@fx Nested IF
+fungsi: IF di dalam IF. Dipakai jika hasilnya lebih dari dua kemungkinan. Excel memeriksa kondisi dari kiri ke kanan dan berhenti di kondisi pertama yang benar.
+syntax: =IF(kondisi1, hasil1, IF(kondisi2, hasil2, hasil_lain))
+args:
+kondisi1, hasil1 | Kondisi dan hasil pertama yang diperiksa
+kondisi2, hasil2 | Kondisi berikutnya, hanya diperiksa jika kondisi1 salah
+hasil_lain | Nilai jika semua kondisi salah
+data:
+| Sales | Achievement |
+| Bella | 108.33% |
+| Dewi | 96.75% |
+| Eko | 78.00% |
+formula: =IF(B2>=100%, "Achieved", IF(B2>=90%, "Near Target", "Below Target"))
+hasil:
+| Sales | Kategori |
+|---|---|
+| Bella | Achieved |
+| Dewi | Near Target |
+| Eko | Below Target |
+jelas: Untuk Dewi (96.75%), kondisi pertama `>=100%` salah, jadi Excel masuk ke IF kedua. Kondisi `>=90%` benar, sehingga hasilnya Near Target. Untuk Eko, kedua kondisi salah dan hasilnya nilai terakhir.
+tip: Urutkan kondisi dari batas tertinggi ke terendah (atau sebaliknya secara konsisten). Jika urutannya acak, nilai 108% bisa tertangkap lebih dulu oleh kondisi `>=90%`.
+salah: Jumlah kurung tutup tidak sesuai jumlah IF. Excel memberi warna berbeda untuk setiap pasang kurung di formula bar, jadi periksa warnanya saat menulis rumus panjang. Jika IF bertingkat lebih dari tiga, pertimbangkan `IFS` atau tabel lookup (BAB 6).
+real: Kategori achievement, grade nilai, klasifikasi umur piutang (0-30, 31-60, di atas 60 hari).
+@@end
+
+@@fx IFS | Excel 2019+
+fungsi: Menguji banyak kondisi berurutan tanpa perlu IF bertingkat. Hasilnya diambil dari kondisi pertama yang benar.
+syntax: =IFS(logical_test1, value_if_true1, [logical_test2, value_if_true2], ...)
+args:
+logical_test1 | Kondisi pertama
+value_if_true1 | Hasil jika kondisi pertama benar
+[logical_test2, value_if_true2] | Pasangan kondisi dan hasil berikutnya, sampai 127 pasang
+data:
+| Peserta | Nilai |
+| Andi | 92 |
+| Bella | 85 |
+| Citra | 71 |
+| Dimas | 64 |
+formula: =IFS(B2>=90, "A", B2>=80, "B", B2>=70, "C", TRUE, "D")
+hasil:
+| Peserta | Grade |
+|---|---|
+| Andi | A |
+| Bella | B |
+| Citra | C |
+| Dimas | D |
+jelas: Excel memeriksa pasangan kondisi satu per satu. Nilai 71 gagal di `>=90` dan `>=80`, lalu lolos di `>=70` sehingga mendapat C. Kondisi terakhir `TRUE` selalu benar dan berfungsi sebagai "selain itu".
+tip: Selalu tutup `IFS` dengan pasangan `TRUE, "nilai default"`. Tanpa itu, data yang tidak memenuhi kondisi apa pun menghasilkan `#N/A`.
+salah: Membuka file berisi `IFS` di Excel 2016 atau lebih lama. Rumus berubah menjadi `#NAME?`. Untuk file yang dibagikan ke banyak orang, gunakan Nested IF.
+real: Grade nilai, kategori pelanggan (Platinum, Gold, Silver), status proyek bertingkat seperti pada studi kasus BAB ini.
+@@end
+
+## 3.2 Menggabungkan Kondisi
+
+| Fungsi | Hasil TRUE jika | Contoh |
+|---|---|---|
+| `AND` | Semua kondisi benar | Target tercapai **dan** absensi baik |
+| `OR` | Minimal satu kondisi benar | Nilai besar **atau** customer prioritas |
+| `NOT` | Kondisi salah | Status **bukan** Closed |
+| `XOR` | Jumlah kondisi yang benar ganjil (untuk dua kondisi: tepat satu yang benar) | Dokumen hanya ada salah satu versi |
+
+@@fx AND
+fungsi: Menghasilkan TRUE hanya jika semua kondisi benar. Hampir selalu dipakai di dalam `IF`.
+syntax: =AND(logical1, [logical2], ...)
+args:
+logical1 | Kondisi pertama
+[logical2] | Kondisi berikutnya, sampai 255 kondisi
+data:
+| Sales | Achievement | Kehadiran |
+| Andi | 108% | 97% |
+| Bella | 102% | 92% |
+| Citra | 96% | 99% |
+formula:
+=AND(B2>=100%, C2>=95%)
+=IF(AND(B2>=100%, C2>=95%), "Dapat Bonus", "-")
+hasil:
+| Sales | AND | Bonus |
+|---|---|---|
+| Andi | TRUE | Dapat Bonus |
+| Bella | FALSE | - |
+| Citra | FALSE | - |
+jelas: Syarat bonus ada dua: achievement minimal 100% dan kehadiran minimal 95%. Andi memenuhi keduanya. Bella gagal di kehadiran, Citra gagal di achievement.
+tip: Untuk rentang nilai, `AND` lebih jelas dibaca daripada dua IF. Contoh nilai antara 70 dan 79: `=AND(B2>=70, B2<=79)`.
+salah: Menulis rentang seperti matematika, `=70<=B2<=79`. Excel menghitungnya bertahap dan hasilnya hampir selalu salah. Gunakan `AND`.
+real: Kelayakan bonus, syarat pencairan termin (progress dan dokumen lengkap), validasi data (tanggal dan nilai sama-sama terisi).
+@@end
+
+@@fx OR
+fungsi: Menghasilkan TRUE jika minimal satu kondisi benar.
+syntax: =OR(logical1, [logical2], ...)
+args:
+logical1 | Kondisi pertama
+[logical2] | Kondisi berikutnya
+data:
+| Project | Nilai Kontrak | Tipe Customer |
+| PRJ-01 | 1,250,000,000 | Regular |
+| PRJ-02 | 450,000,000 | Key Account |
+| PRJ-03 | 300,000,000 | Regular |
+formula: =IF(OR(B2>=1000000000, C2="Key Account"), "PRIORITAS", "NORMAL")
+hasil:
+| Project | Prioritas |
+|---|---|
+| PRJ-01 | PRIORITAS |
+| PRJ-02 | PRIORITAS |
+| PRJ-03 | NORMAL |
+jelas: PRJ-01 lolos karena nilainya di atas 1 miliar. PRJ-02 lolos karena customer Key Account. PRJ-03 tidak memenuhi satu pun syarat.
+tip: Untuk mengecek satu cell terhadap banyak pilihan, gunakan array konstan: `=OR(C2={"Key Account","Government"})`.
+salah: Menulis `=OR(C2="Key Account","Government")`. Argument kedua bukan kondisi, hanya teks, sehingga Excel mengembalikan `#VALUE!`. Setiap pilihan harus ditulis sebagai perbandingan lengkap.
+real: Penanda prioritas proyek, pengecualian aturan approval, filter status yang perlu tindak lanjut (Pending atau Revisi).
+@@end
+
+@@fx NOT
+fungsi: Membalik hasil logika. TRUE menjadi FALSE dan sebaliknya.
+syntax: =NOT(logical)
+args:
+logical | Kondisi atau nilai logika yang dibalik
+data:
+| Tiket | Status |
+| TK-01 | Open |
+| TK-02 | Closed |
+| TK-03 | Pending |
+formula: =NOT(B2="Closed")
+hasil: TK-01 TRUE, TK-02 FALSE, TK-03 TRUE
+jelas: Kondisi `B2="Closed"` hanya benar untuk TK-02. `NOT` membaliknya, jadi hasil TRUE berarti tiket masih aktif.
+tip: `NOT` paling berguna untuk membalik fungsi IS. `=NOT(ISBLANK(C2))` berarti "cell C2 sudah diisi". Fungsi IS dibahas di BAB 8.
+salah: Menumpuk `NOT` yang tidak perlu. `=NOT(B2="Closed")` sama dengan `=B2<>"Closed"`, dan versi kedua lebih mudah dibaca.
+real: Menandai tiket aktif, dokumen yang belum diverifikasi, karyawan yang bukan status resign.
+@@end
+
+@@fx XOR | Excel 2013+
+fungsi: Menghasilkan TRUE jika jumlah kondisi yang benar ganjil. Untuk dua kondisi, artinya tepat satu yang benar.
+syntax: =XOR(logical1, [logical2], ...)
+args:
+logical1 | Kondisi pertama
+[logical2] | Kondisi berikutnya
+data:
+| Invoice | Dokumen Fisik | Dokumen Digital |
+| INV-01 | Ya | Ya |
+| INV-02 | Ya | Tidak |
+| INV-03 | Tidak | Ya |
+| INV-04 | Tidak | Tidak |
+formula: =XOR(B2="Ya", C2="Ya")
+hasil: INV-01 FALSE, INV-02 TRUE, INV-03 TRUE, INV-04 FALSE
+jelas: INV-02 dan INV-03 hanya punya satu versi dokumen, jadi hasilnya TRUE dan perlu dilengkapi. INV-01 punya keduanya. INV-04 tidak punya sama sekali, yang juga FALSE di `XOR`, sehingga perlu kondisi tambahan jika kasus ini ingin ditandai.
+tip: Gabungkan dengan `IF` bertingkat untuk membedakan tiga keadaan: `=IF(AND(B2="Ya",C2="Ya"), "Lengkap", IF(XOR(B2="Ya",C2="Ya"), "Sebagian", "Belum Ada"))`.
+salah: Menganggap `XOR` berarti "salah satu atau keduanya". Itu adalah `OR`. `XOR` justru FALSE ketika kedua kondisi benar.
+real: Rekonsiliasi dua sumber data (ada di sistem A atau di sistem B saja), pengecekan dokumen yang belum lengkap, validasi input yang harus diisi salah satu.
+@@end
+
+## 3.3 Memilih dari Daftar
+
+@@fx SWITCH | Excel 2019+
+fungsi: Mencocokkan satu nilai dengan daftar pilihan, lalu mengembalikan hasil yang sesuai. Lebih ringkas dari Nested IF untuk pencocokan persis.
+syntax: =SWITCH(expression, value1, result1, [value2, result2], ..., [default])
+args:
+expression | Nilai yang dicocokkan
+value1, result1 | Pilihan pertama dan hasilnya
+[value2, result2] | Pilihan berikutnya
+[default] | Hasil jika tidak ada yang cocok (argument terakhir tanpa pasangan)
+data:
+| Kode Region |
+| JKT |
+| SBY |
+| MDN |
+formula: =SWITCH(A2, "JKT", "Jakarta", "BDG", "Bandung", "SBY", "Surabaya", "Lainnya")
+hasil: JKT → Jakarta, SBY → Surabaya, MDN → Lainnya
+jelas: Excel mencocokkan isi A2 dengan setiap pilihan. MDN tidak ada di daftar, sehingga yang keluar adalah nilai default "Lainnya".
+tip: `SWITCH` hanya untuk pencocokan persis. Untuk rentang angka (misalnya nilai 80-89), gunakan `IFS`. Jika daftar pilihan lebih dari 5-6 item, simpan di tabel lalu pakai `XLOOKUP` (BAB 6) supaya mudah diperbarui.
+salah: Lupa menulis default. Kode yang tidak dikenal akan menghasilkan `#N/A`.
+real: Kode region menjadi nama region, kode status menjadi label, angka bulan menjadi nama kuartal.
+@@end
+
+## 3.4 Menangani Error
+
+| Error | Penyebab umum |
+|---|---|
+| `#DIV/0!` | Pembagian dengan nol atau cell kosong |
+| `#N/A` | Data yang dicari tidak ditemukan (lookup) |
+| `#VALUE!` | Tipe data salah, misalnya teks ikut dihitung |
+| `#REF!` | Referensi hilang karena baris atau kolom dihapus |
+| `#NAME?` | Nama fungsi salah ketik, atau fungsi tidak ada di versi Excel tersebut |
+| `#NUM!` | Angka tidak valid, misalnya akar dari bilangan negatif |
+
+@@fx IFERROR
+fungsi: Menampilkan nilai pengganti jika rumus menghasilkan error apa pun. Jika tidak error, hasil rumus asli yang tampil.
+syntax: =IFERROR(value, value_if_error)
+args:
+value | Rumus yang diperiksa
+value_if_error | Nilai pengganti jika terjadi error
+data:
+| Sales | Target | Actual |
+| Andi | 50,000,000 | 45,000,000 |
+| Gita (baru) | | 12,000,000 |
+formula: =IFERROR(C2/B2, "Target belum ada")
+hasil: Andi 90%, Gita "Target belum ada"
+jelas: Untuk Andi, pembagian berjalan normal. Target Gita masih kosong, sehingga `C3/B3` menghasilkan `#DIV/0!`. `IFERROR` menangkap error itu dan menampilkan teks pengganti.
+tip: Untuk laporan yang akan dijumlahkan, gunakan pengganti angka `0` atau teks kosong `""`. Teks seperti "Target belum ada" tidak ikut dijumlahkan dan tidak mengganggu `SUM`, tetapi bisa mengganggu perhitungan lain yang mengharapkan angka.
+salah: Membungkus semua rumus dengan `IFERROR` sejak awal. Error yang seharusnya memberi tahu ada data salah (misalnya salah ketik referensi) ikut tersembunyi. Pasang `IFERROR` setelah rumus terbukti benar.
+real: Laporan achievement dengan target kosong, rasio keuangan yang pembaginya bisa nol, hasil lookup yang belum lengkap.
+@@end
+
+@@fx IFNA | Excel 2013+
+fungsi: Menampilkan nilai pengganti hanya untuk error `#N/A`. Error lain tetap tampil sehingga masalah lain tidak tersembunyi.
+syntax: =IFNA(value, value_if_na)
+args:
+value | Rumus yang diperiksa, biasanya rumus lookup
+value_if_na | Nilai pengganti jika hasilnya `#N/A`
+data:
+| Kode | Nama Material | | | Cari Kode |
+| M-001 | Kabel FO 24 Core | | | M-009 |
+| M-002 | Closure 48 Core | | | |
+| M-003 | ODP 16 Port | | | |
+formula: =IFNA(VLOOKUP(E2, A2:B4, 2, FALSE), "Kode tidak ditemukan")
+hasil: Kode tidak ditemukan
+jelas: `VLOOKUP` mencari M-009 di kolom A dan tidak menemukannya, sehingga menghasilkan `#N/A`. `IFNA` menggantinya dengan pesan yang lebih jelas. `VLOOKUP` dibahas lengkap di BAB 6.
+tip: Untuk rumus lookup, `IFNA` lebih aman daripada `IFERROR`. Jika Anda salah menulis nomor kolom sehingga muncul `#REF!`, error itu tetap terlihat dan bisa segera diperbaiki.
+salah: Memakai `IFNA` untuk pembagian. Error pembagian adalah `#DIV/0!`, bukan `#N/A`, sehingga tidak tertangkap.
+real: Lookup kode material, pencarian nama karyawan dari NIK, pencarian harga dari price list.
+@@end
+
+@@case Project Status Monitoring
+problem: Tim project admin mengelola tujuh proyek dengan status yang selama ini diisi manual. Status sering terlambat diperbarui sehingga laporan mingguan tidak akurat. Status harus dihitung otomatis dari tanggal rencana, progress, dan dokumen BAST, dengan enam kemungkinan: NOT STARTED, ON PROGRESS, ON TRACK, DELAY, COMPLETED, dan CLOSED.
+data:
+| Project | Plan Start | Plan Finish | Progress | BAST | Plan % | Status | Tgl Acuan | 15 Jun 2026 |
+| PRJ-01 FO Backbone Medan | 01 Apr 2026 | 30 Jun 2026 | 85% | | | |
+| PRJ-02 Tower Bekasi | 01 Mar 2026 | 31 May 2026 | 90% | | | |
+| PRJ-03 FTTH Bandung | 01 Jul 2026 | 30 Sep 2026 | 0% | | | |
+| PRJ-04 Upgrade BTS Bogor | 01 May 2026 | 31 Jul 2026 | 40% | | | |
+| PRJ-05 Relokasi ODC Depok | 01 Feb 2026 | 30 Apr 2026 | 100% | Ya | | |
+| PRJ-06 FO Access Tangerang | 01 Apr 2026 | 31 May 2026 | 100% | | | |
+| PRJ-07 Microcell Jakarta | 15 May 2026 | 15 Jul 2026 | 20% | | | |
+formula:
+Aturan status diperiksa berurutan dari atas:
+
+| Urutan | Kondisi | Status |
+|---|---|---|
+| 1 | BAST sudah ada | CLOSED |
+| 2 | Progress 100% | COMPLETED |
+| 3 | Progress 0% dan belum masuk tanggal mulai | NOT STARTED |
+| 4 | Sudah melewati Plan Finish | DELAY |
+| 5 | Progress ≥ Plan % | ON TRACK |
+| 6 | Progress tertinggal maksimal 10 poin dari Plan % | ON PROGRESS |
+| 7 | Selain itu | DELAY |
+
+Plan % adalah persentase waktu yang sudah berjalan (F2), dibatasi antara 0% dan 100%. Tanggal acuan disimpan di I1.
+
+```excel
+=MIN(1, MAX(0, ($I$1-B2)/(C2-B2)))     // F2, Plan %
+=IFS(E2="Ya","CLOSED", D2=1,"COMPLETED", AND(D2=0,$I$1<B2),"NOT STARTED", $I$1>C2,"DELAY", D2>=F2,"ON TRACK", D2>=F2-0.1,"ON PROGRESS", TRUE,"DELAY")   // G2
+```
+
+Versi untuk Excel 2016 ke bawah (tanpa `IFS`):
+
+```excel
+=IF(E2="Ya","CLOSED",IF(D2=1,"COMPLETED",IF(AND(D2=0,$I$1<B2),"NOT STARTED",IF($I$1>C2,"DELAY",IF(D2>=F2,"ON TRACK",IF(D2>=F2-0.1,"ON PROGRESS","DELAY"))))))
+```
+
+Rekap jumlah per status:
+
+```excel
+=COUNTIF($G$2:$G$8, "DELAY")
+```
+result:
+| Project | Progress | Plan % | Status |
+|---|---|---|---|
+| PRJ-01 FO Backbone Medan | 85% | 83.33% | ON TRACK |
+| PRJ-02 Tower Bekasi | 90% | 100.00% | DELAY |
+| PRJ-03 FTTH Bandung | 0% | 0.00% | NOT STARTED |
+| PRJ-04 Upgrade BTS Bogor | 40% | 49.45% | ON PROGRESS |
+| PRJ-05 Relokasi ODC Depok | 100% | 100.00% | CLOSED |
+| PRJ-06 FO Access Tangerang | 100% | 100.00% | COMPLETED |
+| PRJ-07 Microcell Jakarta | 20% | 50.82% | DELAY |
+
+| Status | Jumlah |
+|---|---|
+| NOT STARTED | 1 |
+| ON PROGRESS | 1 |
+| ON TRACK | 1 |
+| DELAY | 2 |
+| COMPLETED | 1 |
+| CLOSED | 1 |
+explain:
+PRJ-01 sudah berjalan 75 dari 90 hari (83.33%), dan progress 85% lebih tinggi dari itu, jadi ON TRACK. PRJ-04 berjalan 45 dari 91 hari (49.45%). Progress 40% memang tertinggal, tetapi masih dalam toleransi 10 poin, sehingga ON PROGRESS. PRJ-07 tertinggal lebih dari 30 poin dan langsung masuk DELAY walau tanggal selesainya belum lewat.
+
+Urutan kondisi menentukan hasil. CLOSED diperiksa paling awal karena proyek yang sudah BAST pasti juga 100%. Jika urutan COMPLETED dan CLOSED ditukar, tidak akan pernah ada proyek berstatus CLOSED.
+
+Tanggal acuan disimpan di I1 supaya contoh ini bisa diuji ulang. Di file kerja, isi I1 dengan `=TODAY()` sehingga status diperbarui otomatis setiap kali file dibuka.
+challenge:
+Tambahkan kolom J berjudul **Eskalasi** (judul di J1, rumus mulai J2). Tampilkan "ESKALASI" jika status DELAY, atau jika status ON PROGRESS dan sisa waktu ke Plan Finish 30 hari atau kurang. Selain itu tampilkan "-".
+answer:
+```excel
+=IF(OR(G2="DELAY", AND(G2="ON PROGRESS", C2-$I$1<=30)), "ESKALASI", "-")
+```
+Hasilnya: PRJ-02 dan PRJ-07 berstatus ESKALASI karena DELAY. PRJ-04 berstatus ON PROGRESS dengan sisa 46 hari, sehingga belum perlu eskalasi. Proyek lain menampilkan "-".
+@@end
+
+:::challenge LATIHAN BAB 3
+15 soal latihan BAB ini ada di bagian [Practice Questions](#150-practice-questions).
+:::

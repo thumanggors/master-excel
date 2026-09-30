@@ -1,0 +1,50 @@
+@@raw
+<section class="full-page cover" id="cover">
+<svg class="art" viewBox="0 0 210 297" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="g1" cx="0.82" cy="0.18" r="0.62"><stop offset="0" stop-color="#21A366" stop-opacity=".55"/><stop offset=".55" stop-color="#0F7A45" stop-opacity=".12"/><stop offset="1" stop-color="#06170F" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g2" cx="0.1" cy="0.95" r="0.55"><stop offset="0" stop-color="#107C41" stop-opacity=".45"/><stop offset="1" stop-color="#06170F" stop-opacity="0"/></radialGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#33C481"/><stop offset="1" stop-color="#107C41" stop-opacity=".15"/></linearGradient>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".45" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity=".25"/></linearGradient>
+    <mask id="m"><rect x="0" y="0" width="210" height="297" fill="url(#fade)"/></mask>
+  </defs>
+  <rect width="210" height="297" fill="#06170F"/>
+  <rect width="210" height="297" fill="url(#g1)"/>
+  <rect width="210" height="297" fill="url(#g2)"/>
+  <g mask="url(#m)" stroke="#8FD9AE" stroke-opacity=".16" stroke-width=".25">
+    <path d="M60 150H210M60 157H210M60 164H210M60 171H210M60 178H210M60 185H210M60 192H210M60 199H210M60 206H210M60 213H210M60 220H210M60 227H210M60 234H210M60 241H210"/>
+    <path d="M60 150V241M82 150V241M104 150V241M126 150V241M148 150V241M170 150V241M192 150V241"/>
+  </g>
+  <g font-family="Inter,Segoe UI,sans-serif" font-size="3.2" fill="#8FD9AE" fill-opacity=".45" text-anchor="middle">
+    <text x="93" y="155">B</text><text x="115" y="155">C</text><text x="137" y="155">D</text><text x="159" y="155">E</text><text x="181" y="155">F</text><text x="201" y="155">G</text>
+  </g>
+  <rect x="148" y="171" width="22" height="7" fill="#21A366" fill-opacity=".12" stroke="#33C481" stroke-width=".6"/>
+  <rect x="168.8" y="176.8" width="2.4" height="2.4" fill="#33C481"/>
+  <g opacity=".9">
+    <rect x="124" y="214" width="9" height="26" rx="1" fill="url(#bar)"/>
+    <rect x="137" y="204" width="9" height="36" rx="1" fill="url(#bar)"/>
+    <rect x="150" y="209" width="9" height="31" rx="1" fill="url(#bar)"/>
+    <rect x="163" y="194" width="9" height="46" rx="1" fill="url(#bar)"/>
+    <rect x="176" y="186" width="9" height="54" rx="1" fill="url(#bar)"/>
+    <rect x="189" y="176" width="9" height="64" rx="1" fill="url(#bar)"/>
+  </g>
+  <polyline points="128.5,206 141.5,197 154.5,200 167.5,186 180.5,178 193.5,167" fill="none" stroke="#86EFB8" stroke-width=".7"/>
+  <g fill="#fff"><circle cx="128.5" cy="206" r="1"/><circle cx="141.5" cy="197" r="1"/><circle cx="154.5" cy="200" r="1"/><circle cx="167.5" cy="186" r="1"/><circle cx="180.5" cy="178" r="1"/><circle cx="193.5" cy="167" r="1.4"/></g>
+  <line x1="120" y1="240.5" x2="202" y2="240.5" stroke="#8FD9AE" stroke-opacity=".4" stroke-width=".3"/>
+  <text x="186" y="120" font-family="Georgia,serif" font-style="italic" font-size="30" fill="#33C481" fill-opacity=".16">fx</text>
+  <text x="150" y="60" font-family="Inter,sans-serif" font-size="22" font-weight="300" fill="#8FD9AE" fill-opacity=".12">Σ</text>
+</svg>
+<div class="float" style="right:16mm;top:24mm">=XLOOKUP(A2,Kode,Harga)</div>
+<div class="float" style="right:14mm;top:104mm">=SUMIFS(Actual,Status,"COMPLETED")</div>
+<div class="float" style="left:64mm;top:176mm;opacity:.85">=FILTER(Data,Status="DELAY")</div>
+<div class="cover-in">
+  <div class="eyebrow">EXCEL REFERENCE BOOK · PRACTICAL TUTORIAL</div>
+  <div class="master">MASTER</div>
+  <h1 class="ct">RUMUS<br><em>EXCEL</em></h1>
+  <div class="rule"></div>
+  <p class="sub">Panduan Lengkap 300+ Rumus Excel<br>dari Basic hingga Advanced</p>
+</div>
+<div class="tag">Administrasi • Finance • HR • Project • Data Analysis • Dashboard</div>
+<div class="author"><small>DITULIS OLEH</small>PICTOR ROITO TUMANGGOR</div>
+</section>
+@@end

@@ -1,0 +1,352 @@
+@@chapter 06 | LOOKUP & PENCARIAN DATA
+desc: Mengambil harga dari price list, nama karyawan dari NIK, atau stok dari kode material adalah pekerjaan yang dilakukan ratusan kali sehari di kantor. Fungsi lookup mengambil data dari tabel lain secara otomatis, sehingga Anda tidak perlu mencari dan menyalin manual.
+goals:
+- Mengambil data dengan VLOOKUP, HLOOKUP, dan LOOKUP
+- Memakai INDEX dan MATCH, sendiri maupun digabung
+- Memakai XLOOKUP dan XMATCH di Excel modern
+- Memahami perbedaan VLOOKUP, XLOOKUP, dan INDEX-MATCH secara objektif
+- Membuat form pencarian material otomatis
+@@end
+
+## 6.1 Tabel Master yang Dipakai di BAB Ini
+
+Sebagian besar contoh di BAB ini mengambil data dari tabel master material berikut. Nama brand dan harga adalah data contoh.
+
+@sheet A1
+| Kode | Nama Material | Brand | Type | Unit | Harga | Stok |
+| MTR-001 | Kabel FO 24 Core | OptiNet | Outdoor | Meter | 12,500 | 8,400 |
+| MTR-002 | Kabel FO Drop 1 Core | FiberMax | Drop | Meter | 2,300 | 15,000 |
+| MTR-003 | Closure 48 Core | OptiNet | Inline | Pcs | 850,000 | 36 |
+| MTR-004 | ODP 16 Port | NexCom | Pole | Pcs | 1,150,000 | 52 |
+| MTR-005 | Patch Cord SC-SC 3m | LinkPro | Indoor | Pcs | 45,000 | 420 |
+| MTR-006 | Splitter 1:8 | NexCom | PLC | Pcs | 175,000 | 0 |
+
+:::important
+Lookup yang andal membutuhkan kunci yang unik dan bersih. Pastikan setiap kode hanya muncul sekali, tidak ada spasi tersembunyi (BAB 4), dan tipe datanya sama antara tabel master dan data yang dicari (teks dengan teks, angka dengan angka).
+:::
+
+## 6.2 Lookup Klasik
+
+@@fx VLOOKUP
+fungsi: Mencari nilai di kolom paling kiri sebuah tabel, lalu mengambil data dari kolom lain di baris yang sama.
+syntax: =VLOOKUP(lookup_value, table_array, col_index_num, [range_lookup])
+args:
+lookup_value | Nilai yang dicari, misalnya kode material
+table_array | Tabel sumber. Kolom kunci harus menjadi kolom pertama
+col_index_num | Nomor kolom yang diambil, dihitung dari kolom pertama `table_array`
+[range_lookup] | FALSE = cocok persis. TRUE atau kosong = cocok mendekati (data harus urut)
+data:
+@cap Tabel master A1:G7. Cell pencarian J2 berisi MTR-004
+| Kode | Nama Material | Brand | Type | Unit | Harga | Stok |
+| MTR-001 | Kabel FO 24 Core | OptiNet | Outdoor | Meter | 12,500 | 8,400 |
+| MTR-002 | Kabel FO Drop 1 Core | FiberMax | Drop | Meter | 2,300 | 15,000 |
+| MTR-003 | Closure 48 Core | OptiNet | Inline | Pcs | 850,000 | 36 |
+| MTR-004 | ODP 16 Port | NexCom | Pole | Pcs | 1,150,000 | 52 |
+| MTR-005 | Patch Cord SC-SC 3m | LinkPro | Indoor | Pcs | 45,000 | 420 |
+| MTR-006 | Splitter 1:8 | NexCom | PLC | Pcs | 175,000 | 0 |
+formula:
+=VLOOKUP(J2, $A$2:$G$7, 2, FALSE)
+=VLOOKUP(J2, $A$2:$G$7, 6, FALSE)
+hasil: ODP 16 Port, dan harga 1,150,000
+jelas: Excel mencari MTR-004 di kolom A (kolom pertama `table_array`), menemukannya di baris 5, lalu mengambil kolom ke-2 (Nama Material) dan kolom ke-6 (Harga) di baris yang sama.
+tip: Ganti nomor kolom dengan `MATCH` supaya rumus tidak rusak saat kolom disisipkan: `=VLOOKUP(J2, $A$1:$G$7, MATCH("Harga", $A$1:$G$1, 0), FALSE)`.
+salah: Lupa menulis `FALSE` di argument terakhir. Excel memakai pencocokan mendekati, dan pada data yang tidak urut hasilnya bisa salah tanpa error sama sekali. Untuk kode, nama, dan ID, selalu tulis `FALSE`.
+real: Mengambil harga dari price list, nama karyawan dari NIK, alamat customer dari kode customer.
+@@end
+
+@@fx HLOOKUP
+fungsi: Versi horizontal dari `VLOOKUP`. Mencari di baris paling atas, lalu mengambil data dari baris lain di kolom yang sama.
+syntax: =HLOOKUP(lookup_value, table_array, row_index_num, [range_lookup])
+args:
+lookup_value | Nilai yang dicari di baris pertama
+table_array | Tabel sumber. Kunci harus berada di baris pertama
+row_index_num | Nomor baris yang diambil
+[range_lookup] | FALSE = cocok persis
+data:
+| Zona | Zona 1 | Zona 2 | Zona 3 |
+| Tarif per kg | 9,000 | 12,000 | 18,000 |
+| Estimasi (hari) | 2 | 3 | 5 |
+formula:
+=HLOOKUP("Zona 2", $A$1:$D$3, 2, FALSE)
+=HLOOKUP("Zona 2", $A$1:$D$3, 3, FALSE)
+hasil: 12,000 per kg, estimasi 3 hari
+jelas: Excel mencari "Zona 2" di baris 1, menemukannya di kolom C, lalu mengambil baris ke-2 (tarif) dan baris ke-3 (estimasi) di kolom C.
+tip: Tabel horizontal sering muncul di tabel tarif dan tabel bulanan (Jan, Feb, Mar sebagai judul kolom). Jika Anda yang mendesain tabel, susun vertikal agar lebih mudah difilter dan dianalisis.
+salah: Sama seperti `VLOOKUP`, lupa `FALSE` menghasilkan pencocokan mendekati.
+real: Tabel tarif per zona, tabel target per bulan yang disusun mendatar, matriks harga per tipe.
+@@end
+
+@@fx LOOKUP
+fungsi: Mencari nilai dengan pencocokan mendekati di data yang urut naik, lalu mengambil nilai di posisi yang sama dari range hasil. Cocok untuk tabel bertingkat.
+syntax: =LOOKUP(lookup_value, lookup_vector, [result_vector])
+args:
+lookup_value | Nilai yang dicari
+lookup_vector | Range pencarian, wajib urut naik
+[result_vector] | Range hasil, ukurannya sama dengan `lookup_vector`
+data:
+| Batas Bawah Penjualan | Komisi | | Penjualan Sales |
+| 0 | 0% | | 62,000,000 |
+| 25,000,000 | 1% | | |
+| 50,000,000 | 2% | | |
+| 100,000,000 | 3% | | |
+formula: =LOOKUP(D2, A2:A5, B2:B5)
+hasil: 2%
+jelas: Excel mencari angka terbesar di kolom A yang masih lebih kecil atau sama dengan 62,000,000, yaitu 50,000,000. Komisi di baris yang sama adalah 2%.
+tip: Mengambil isi terakhir dari sebuah kolom (misalnya progress terakhir yang diinput): `=LOOKUP(2, 1/(B2:B100<>""), B2:B100)`. Rumus ini bekerja di semua versi Excel.
+salah: Batas bawah tidak diurutkan dari kecil ke besar. Hasil `LOOKUP` menjadi tidak bisa diprediksi.
+real: Tabel komisi bertingkat, tarif pajak progresif, kategori umur piutang, grade nilai berdasarkan rentang.
+@@end
+
+## 6.3 INDEX dan MATCH
+
+@@fx INDEX
+fungsi: Mengambil isi cell berdasarkan nomor baris dan nomor kolom di dalam sebuah range.
+syntax: =INDEX(array, row_num, [column_num])
+args:
+array | Range sumber
+row_num | Nomor baris di dalam range
+[column_num] | Nomor kolom di dalam range. Boleh dikosongkan jika range hanya satu kolom
+data:
+@cap Tabel master di A1:G7 (lihat 6.1)
+| Kode | Nama Material | Brand |
+| MTR-001 | Kabel FO 24 Core | OptiNet |
+| MTR-002 | Kabel FO Drop 1 Core | FiberMax |
+| MTR-003 | Closure 48 Core | OptiNet |
+| MTR-004 | ODP 16 Port | NexCom |
+formula:
+=INDEX($A$2:$G$7, 4, 2)
+=INDEX($B$2:$B$7, 4)
+hasil: ODP 16 Port (kedua rumus)
+jelas: Baris ke-4 dari range A2:G7 adalah baris 5 di sheet (MTR-004). Kolom ke-2 dari range adalah Nama Material. Rumus kedua memakai range satu kolom, jadi cukup nomor baris.
+tip: Nomor baris dan kolom dihitung dari awal range, bukan dari baris 1 sheet. Jika range dimulai dari A2, baris ke-1 range adalah baris 2 sheet.
+salah: Nomor baris melebihi jumlah baris range menghasilkan `#REF!`.
+real: Mengambil data dari posisi tertentu, menjadi pasangan `MATCH` untuk lookup fleksibel, menampilkan data ke-n dalam daftar.
+@@end
+
+@@fx MATCH
+fungsi: Mencari posisi (nomor urut) sebuah nilai di dalam satu baris atau satu kolom.
+syntax: =MATCH(lookup_value, lookup_array, [match_type])
+args:
+lookup_value | Nilai yang dicari
+lookup_array | Range satu baris atau satu kolom
+[match_type] | 0 = cocok persis. 1 = mendekati, data urut naik. -1 = mendekati, data urut turun
+data:
+@cap Tabel master di A1:G7 (lihat 6.1)
+| Kode | Nama Material | Brand | Type | Unit | Harga | Stok |
+| MTR-001 | Kabel FO 24 Core | OptiNet | Outdoor | Meter | 12,500 | 8,400 |
+formula:
+=MATCH("MTR-004", $A$2:$A$7, 0)
+=MATCH("Harga", $A$1:$G$1, 0)
+hasil: 4, dan 6
+jelas: MTR-004 berada di urutan ke-4 dari range A2:A7. Judul "Harga" berada di urutan ke-6 dari judul kolom A1:G1. `MATCH` tidak mengambil isi cell, hanya posisinya.
+tip: `MATCH` bisa dipakai untuk mengecek apakah data ada di daftar lain: `=ISNUMBER(MATCH(A2, Daftar!A:A, 0))` menghasilkan TRUE jika ada.
+salah: Default `match_type` adalah 1 (mendekati), bukan 0. Tanpa angka 0, pencarian kode di data yang tidak urut bisa mengembalikan posisi yang salah.
+real: Menentukan nomor kolom otomatis untuk `VLOOKUP`/`INDEX`, mengecek keberadaan data, rekonsiliasi dua daftar.
+@@end
+
+@@fx INDEX + MATCH
+fungsi: Kombinasi dua fungsi untuk lookup yang fleksibel. `MATCH` mencari posisi, lalu `INDEX` mengambil data di posisi tersebut. Bisa mencari ke kiri dan ke dua arah.
+syntax: =INDEX(return_range, MATCH(lookup_value, lookup_range, 0))
+args:
+return_range | Kolom hasil yang diambil
+lookup_value | Nilai yang dicari
+lookup_range | Kolom tempat mencari, ukurannya sama dengan `return_range`
+data:
+@cap Tabel master di A1:G7 (lihat 6.1). J2 = MTR-004, J3 = Splitter 1:8
+| Kode | Nama Material | Brand | Type | Unit | Harga | Stok |
+| MTR-001 | Kabel FO 24 Core | OptiNet | Outdoor | Meter | 12,500 | 8,400 |
+| MTR-002 | Kabel FO Drop 1 Core | FiberMax | Drop | Meter | 2,300 | 15,000 |
+| MTR-003 | Closure 48 Core | OptiNet | Inline | Pcs | 850,000 | 36 |
+| MTR-004 | ODP 16 Port | NexCom | Pole | Pcs | 1,150,000 | 52 |
+| MTR-005 | Patch Cord SC-SC 3m | LinkPro | Indoor | Pcs | 45,000 | 420 |
+| MTR-006 | Splitter 1:8 | NexCom | PLC | Pcs | 175,000 | 0 |
+formula:
+=INDEX($F$2:$F$7, MATCH(J2, $A$2:$A$7, 0))
+=INDEX($A$2:$A$7, MATCH(J3, $B$2:$B$7, 0))
+=INDEX($A$2:$G$7, MATCH(J2, $A$2:$A$7, 0), MATCH("Stok", $A$1:$G$1, 0))
+hasil:
+1,150,000, lalu MTR-006, lalu 52
+jelas: Rumus pertama mengambil harga MTR-004. Rumus kedua mencari berdasarkan nama di kolom B lalu mengambil kode di kolom A, sesuatu yang tidak bisa dilakukan `VLOOKUP` karena kolom hasilnya di sebelah kiri. Rumus ketiga memakai dua `MATCH`: satu untuk baris, satu untuk kolom.
+tip: Baca rumus ini dari dalam ke luar: "cari posisi J2 di kolom kode, lalu ambil isi kolom harga di posisi itu".
+salah: `return_range` dan `lookup_range` tidak sejajar, misalnya `F2:F7` dengan `A3:A8`. Hasilnya bergeser satu baris dan tidak memunculkan error.
+real: Lookup ke kiri, tabel matriks harga (baris tipe, kolom zona), laporan yang kolomnya sering disisipkan.
+@@end
+
+## 6.4 Lookup Modern
+
+@@fx XLOOKUP | Excel 2021+
+fungsi: Fungsi lookup modern yang mencari di satu range dan mengambil hasil dari range lain. Bisa mencari ke kiri, punya pesan pengganti bawaan, dan bisa mencari dari bawah.
+syntax: =XLOOKUP(lookup_value, lookup_array, return_array, [if_not_found], [match_mode], [search_mode])
+args:
+lookup_value | Nilai yang dicari
+lookup_array | Range tempat mencari
+return_array | Range hasil. Boleh lebih dari satu kolom
+[if_not_found] | Nilai jika tidak ditemukan
+[match_mode] | 0 = persis (default), -1 = persis atau lebih kecil berikutnya, 1 = persis atau lebih besar berikutnya, 2 = wildcard
+[search_mode] | 1 = dari atas (default), -1 = dari bawah
+data:
+@cap Tabel master di A1:G7 (lihat 6.1). J2 = MTR-004, J4 = MTR-099
+| Kode | Nama Material | Brand | Type | Unit | Harga | Stok |
+| MTR-001 | Kabel FO 24 Core | OptiNet | Outdoor | Meter | 12,500 | 8,400 |
+| MTR-002 | Kabel FO Drop 1 Core | FiberMax | Drop | Meter | 2,300 | 15,000 |
+| MTR-003 | Closure 48 Core | OptiNet | Inline | Pcs | 850,000 | 36 |
+| MTR-004 | ODP 16 Port | NexCom | Pole | Pcs | 1,150,000 | 52 |
+| MTR-005 | Patch Cord SC-SC 3m | LinkPro | Indoor | Pcs | 45,000 | 420 |
+| MTR-006 | Splitter 1:8 | NexCom | PLC | Pcs | 175,000 | 0 |
+formula:
+=XLOOKUP(J2, $A$2:$A$7, $F$2:$F$7)
+=XLOOKUP(J4, $A$2:$A$7, $F$2:$F$7, "Tidak ditemukan")
+=XLOOKUP(J2, $A$2:$A$7, $B$2:$G$7)
+hasil:
+1,150,000, lalu "Tidak ditemukan", lalu satu baris berisi: ODP 16 Port | NexCom | Pole | Pcs | 1,150,000 | 52
+jelas: Rumus pertama setara `INDEX-MATCH` tetapi lebih ringkas. Rumus kedua menangani kode yang tidak ada tanpa `IFNA`. Rumus ketiga mengembalikan enam kolom sekaligus. Hasilnya "tumpah" (spill) ke cell di kanannya.
+tip: `search_mode` -1 berguna untuk mengambil transaksi terakhir: `=XLOOKUP("MTR-004", Transaksi[Kode], Transaksi[Tanggal], , 0, -1)` memberi tanggal transaksi terbaru untuk kode tersebut.
+salah: Hasil spill (rumus ketiga) terhalang cell yang sudah berisi data sehingga muncul `#SPILL!`. Kosongkan area di kanan rumus. Membuka file di Excel 2019 atau lebih lama menghasilkan `#NAME?`.
+real: Semua kebutuhan lookup harian di Microsoft 365, form pencarian data, pengambilan transaksi terakhir.
+@@end
+
+@@fx XMATCH | Excel 2021+
+fungsi: Versi modern `MATCH`. Default-nya sudah cocok persis, dan bisa mencari dari bawah.
+syntax: =XMATCH(lookup_value, lookup_array, [match_mode], [search_mode])
+args:
+lookup_value | Nilai yang dicari
+lookup_array | Range satu baris atau satu kolom
+[match_mode] | 0 = persis (default), -1, 1, atau 2 (wildcard)
+[search_mode] | 1 = dari atas, -1 = dari bawah
+data:
+@cap Kolom Brand di tabel master, C2:C7
+| Kode | Nama Material | Brand |
+| MTR-001 | Kabel FO 24 Core | OptiNet |
+| MTR-002 | Kabel FO Drop 1 Core | FiberMax |
+| MTR-003 | Closure 48 Core | OptiNet |
+| MTR-004 | ODP 16 Port | NexCom |
+| MTR-005 | Patch Cord SC-SC 3m | LinkPro |
+| MTR-006 | Splitter 1:8 | NexCom |
+formula:
+=XMATCH("OptiNet", $C$2:$C$7)
+=XMATCH("OptiNet", $C$2:$C$7, 0, -1)
+hasil: 1 (kemunculan pertama) dan 3 (kemunculan terakhir)
+jelas: OptiNet muncul di posisi 1 dan 3. Dengan `search_mode` -1, pencarian dimulai dari bawah sehingga posisi terakhir yang ditemukan lebih dulu.
+tip: Pasangkan dengan `INDEX` jika Anda terbiasa dengan pola `INDEX-MATCH`: `=INDEX($B$2:$B$7, XMATCH("OptiNet", $C$2:$C$7, 0, -1))` menghasilkan Closure 48 Core.
+salah: Menganggap `XMATCH` mengembalikan nomor baris sheet. Hasilnya adalah posisi di dalam range, sama seperti `MATCH`.
+real: Mencari posisi transaksi terakhir, menentukan kolom dinamis, pencarian dengan wildcard.
+@@end
+
+@@fx CHOOSE
+fungsi: Memilih satu nilai dari daftar berdasarkan nomor urut.
+syntax: =CHOOSE(index_num, value1, [value2], ...)
+args:
+index_num | Nomor urut pilihan, mulai dari 1
+value1 | Pilihan pertama
+[value2] | Pilihan berikutnya, sampai 254 pilihan
+data:
+| Tiket | Kode Prioritas |
+| TK-101 | 1 |
+| TK-102 | 3 |
+| TK-103 | 2 |
+formula: =CHOOSE(B2, "Tinggi", "Sedang", "Rendah")
+hasil: TK-101 Tinggi, TK-102 Rendah, TK-103 Sedang
+jelas: Kode 1 memilih pilihan pertama, kode 3 memilih pilihan ketiga.
+tip: Pilihan di `CHOOSE` juga bisa berupa range. `=SUM(CHOOSE(B1, Jan!C2:C50, Feb!C2:C50, Mar!C2:C50))` menjumlahkan data bulan sesuai pilihan di B1.
+salah: `index_num` 0 atau melebihi jumlah pilihan menghasilkan `#VALUE!`. Validasi input dengan Data Validation (angka 1 sampai jumlah pilihan).
+real: Label prioritas, pemilihan skenario (optimis, normal, pesimis), nama kuartal dari nomor kuartal.
+@@end
+
+## 6.5 VLOOKUP vs XLOOKUP vs INDEX-MATCH
+
+Ketiganya bisa menyelesaikan kebutuhan lookup harian. Perbedaannya ada di cara penulisan, fleksibilitas, dan versi Excel yang mendukung. Tabel berikut membandingkan fakta, bukan menentukan yang terbaik.
+
+| Aspek | VLOOKUP | INDEX-MATCH | XLOOKUP |
+|---|---|---|---|
+| Syntax | `=VLOOKUP(nilai, tabel, no_kolom, FALSE)` | `=INDEX(hasil, MATCH(nilai, cari, 0))` | `=XLOOKUP(nilai, cari, hasil)` |
+| Cara kerja | Cari di kolom pertama tabel, ambil kolom ke-n | `MATCH` mencari posisi, `INDEX` mengambil isi | Cari di range pencarian, ambil dari range hasil |
+| Arah pencarian | Hanya ke kanan dari kolom kunci | Ke segala arah | Ke segala arah |
+| Default pencocokan | Mendekati (harus ditulis `FALSE`) | Mendekati (harus ditulis `0`) | Persis |
+| Sisipan kolom | Nomor kolom bisa bergeser | Aman | Aman |
+| Tidak ditemukan | `#N/A`, perlu `IFNA` | `#N/A`, perlu `IFNA` | Argument `if_not_found` bawaan |
+| Hasil banyak kolom | Satu kolom per rumus | Satu kolom per rumus (tanpa spill) | Bisa banyak kolom sekaligus (spill) |
+| Cari dari bawah | Tidak bisa langsung | Perlu teknik tambahan | `search_mode` -1 |
+| Kompatibilitas | Semua versi | Semua versi | Excel 2021, 2024, Microsoft 365, Excel untuk web |
+
+### Kapan digunakan
+
+- **VLOOKUP** cocok untuk file yang dibuka banyak orang dengan versi Excel beragam, tabel master yang kolom kuncinya sudah di paling kiri, dan tim yang sudah terbiasa dengan fungsi ini.
+- **INDEX-MATCH** cocok ketika file harus kompatibel dengan Excel lama tetapi Anda butuh lookup ke kiri, lookup dua arah, atau tabel yang kolomnya sering disisipkan.
+- **XLOOKUP** cocok ketika semua pengguna file memakai Excel 2021, 2024, atau Microsoft 365, dan Anda ingin rumus lebih pendek dengan penanganan data tidak ditemukan bawaan.
+
+:::tip
+Sebelum memilih, tanyakan satu hal: versi Excel apa yang dipakai orang yang akan membuka file ini? Jawaban itu biasanya sudah menentukan pilihan.
+:::
+
+@@case Material Database
+problem: Staf gudang sering ditanya detail material oleh tim lapangan: nama, brand, tipe, satuan, harga, dan sisa stok. Mereka ingin form sederhana: cukup ketik kode material di satu cell, lalu semua detail muncul otomatis beserta status stoknya.
+data:
+@cap Tabel master di A1:G7 (lengkap di 6.1). Form pencarian di kolom I dan J
+| Kode | Nama Material | Brand | Type | Unit | Harga | Stok | | Field | Hasil |
+| MTR-001 | Kabel FO 24 Core | OptiNet | Outdoor | Meter | 12,500 | 8,400 | | Kode | MTR-003 |
+| MTR-002 | Kabel FO Drop 1 Core | FiberMax | Drop | Meter | 2,300 | 15,000 | | Nama Material | |
+| MTR-003 | Closure 48 Core | OptiNet | Inline | Pcs | 850,000 | 36 | | Brand | |
+| MTR-004 | ODP 16 Port | NexCom | Pole | Pcs | 1,150,000 | 52 | | Type | |
+| MTR-005 | Patch Cord SC-SC 3m | LinkPro | Indoor | Pcs | 45,000 | 420 | | Unit | |
+| MTR-006 | Splitter 1:8 | NexCom | PLC | Pcs | 175,000 | 0 | | Harga | |
+| | | | | | | | | Stok | |
+| | | | | | | | | Status Stok | |
+formula:
+Label di I3:I8 dibuat sama persis dengan judul kolom tabel master. Dengan begitu, satu rumus di J3 bisa disalin sampai J8.
+
+**Versi semua Excel (VLOOKUP + MATCH):**
+
+```excel
+=IFERROR(VLOOKUP($J$2, $A$1:$G$7, MATCH(I3, $A$1:$G$1, 0), FALSE), "Kode tidak ada")
+```
+
+**Versi INDEX-MATCH:**
+
+```excel
+=IFERROR(INDEX($A$1:$G$7, MATCH($J$2, $A$1:$A$7, 0), MATCH(I3, $A$1:$G$1, 0)), "Kode tidak ada")
+```
+
+**Versi Excel 2021+ (XLOOKUP):**
+
+```excel
+=XLOOKUP($J$2, $A$2:$A$7, XLOOKUP(I3, $A$1:$G$1, $A$2:$G$7), "Kode tidak ada")
+```
+
+Status stok di J9:
+
+```excel
+=IF(J8=0, "HABIS", IF(J8<50, "MENIPIS", "AMAN"))
+```
+result:
+| Field | Hasil untuk MTR-003 |
+|---|---|
+| Nama Material | Closure 48 Core |
+| Brand | OptiNet |
+| Type | Inline |
+| Unit | Pcs |
+| Harga | 850,000 |
+| Stok | 36 |
+| Status Stok | MENIPIS |
+explain:
+`MATCH(I3, $A$1:$G$1, 0)` mencari posisi label "Nama Material" di baris judul (posisi 2) dan memberikannya ke `VLOOKUP` sebagai nomor kolom. Saat rumus disalin ke J4, label berubah menjadi "Brand" sehingga nomor kolom otomatis menjadi 3. Satu rumus melayani semua field.
+
+Pada versi XLOOKUP, `XLOOKUP` bagian dalam mengambil satu kolom utuh sesuai label (misalnya seluruh kolom Brand), lalu `XLOOKUP` bagian luar mengambil baris yang kodenya cocok dari kolom tersebut.
+
+Stok 36 berada di bawah batas 50, sehingga statusnya MENIPIS. Batas 50 bisa dipindah ke cell tersendiri agar mudah diubah.
+challenge:
+1. Ubah kode di J2 menjadi MTR-006. Apa saja hasil yang muncul?
+2. Tambahkan field **Nilai Stok** (harga × stok) di J10.
+3. Tambahkan Data Validation di J2 supaya pengguna hanya bisa memilih kode yang ada di tabel master.
+answer:
+1. Splitter 1:8, NexCom, PLC, Pcs, 175,000, stok 0, status HABIS.
+2. Rumus Nilai Stok:
+```excel
+=IFERROR(J7*J8, 0)
+```
+Untuk MTR-003 hasilnya 850,000 × 36 = 30,600,000. Untuk MTR-006 hasilnya 0.
+3. Pilih J2, buka Data > Data Validation, pilih **List**, lalu isi Source dengan `=$A$2:$A$7`. Pengguna kini memilih kode dari dropdown sehingga salah ketik tidak mungkin terjadi.
+@@end
+
+:::challenge LATIHAN BAB 6
+15 soal latihan BAB ini ada di bagian [Practice Questions](#150-practice-questions).
+:::
